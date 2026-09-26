@@ -503,7 +503,11 @@ fi
 if [[ "$is_ipx" == "true" ]]; then
 echo "[ipx]"
 echo "mode = \"${CONFIG[ipx_mode]}\""
-echo "profile = \"${CONFIG[ipx_profile]}\";"
+local real_prof="${CONFIG[ipx_profile]}"
+if [[ "$real_prof" == "wolfi" || "$real_prof" == "gre-fou" || "$real_prof" == "gre_fou" ]]; then
+    real_prof="gre"
+fi
+echo "profile = \"$real_prof\""
 echo "listen_ip = \"${CONFIG[ipx_listen_ip]}\""
 echo "dst_ip = \"${CONFIG[ipx_dst_ip]}\""
 echo "interface = \"${CONFIG[ipx_interface]}\""

@@ -242,7 +242,8 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
             ipx_prof = body.get("ipx_profile", "tcp").replace("-", "_")
             lines.append("[ipx]")
             lines.append(f'mode = "{mode}"')
-            lines.append(f'profile = "{ipx_prof}"')
+            real_prof = "gre" if ipx_prof in ["wolfi", "gre-fou", "gre_fou"] else ipx_prof
+            lines.append(f'profile = "{real_prof}"')
             lines.append(f'listen_ip = "{body.get("ipx_listen_ip", "0.0.0.0")}"')
             lines.append(f'dst_ip = "{body.get("ipx_dst_ip", "1.2.3.4")}"')
             lines.append(f'interface = "{body.get("ipx_interface", "eth0")}"')
