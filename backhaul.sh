@@ -427,7 +427,7 @@ local mode="$2"
 [[ "$is_ipx" != "true" ]] && return
 colorize blue "━━━ IPX Configuration ━━━" bold
 CONFIG[ipx_mode]="$mode"
-AVAILABLE_PROFILES=("icmp" "ipip" "udp" "tcp" "gre" "bip")
+AVAILABLE_PROFILES=("icmp" "ipip" "udp" "tcp" "gre" "bip" "fou" "icmp_fou")
 colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
@@ -451,7 +451,7 @@ colorize red "Destination IP cannot be empty."
 done
 interface=$(ip route show default | awk '{print $5}')
 prompt_with_default "Network Interface" $interface "CONFIG[ipx_interface]"
-if [[ "${CONFIG[ipx_profile]}" == "icmp" ]]; then
+if [[ "${CONFIG[ipx_profile]}" == "icmp" || "${CONFIG[ipx_profile]}" == "icmp_fou" ]]; then
 prompt_with_default "ICMP Type" "0" "CONFIG[ipx_icmp_type]"
 prompt_with_default "ICMP Code" "0" "CONFIG[ipx_icmp_code]"
 fi

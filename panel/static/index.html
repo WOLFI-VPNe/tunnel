@@ -158,7 +158,7 @@
                         <div class="form-group">
                             <label>Transport Type</label>
                             <select id="tunnel-transport" onchange="updateFormVisibility()">
-                                <option value="tcp" selected>tcp</option>
+                                <option value="tcp">tcp</option>
                                 <option value="tcpmux">tcpmux</option>
                                 <option value="xtcpmux">xtcpmux</option>
                                 <option value="ws">ws (WebSocket)</option>
@@ -181,19 +181,21 @@
                         <div class="form-group">
                             <label>TUN Encapsulation Mode</label>
                             <select id="tun-encapsulation" onchange="updateFormVisibility()">
-                                <option value="tcp" selected>tcp</option>
+                                <option value="tcp">tcp</option>
                                 <option value="ipx">ipx</option>
                             </select>
                         </div>
                         <div class="form-group" id="group-ipx-profile" style="display: none;">
                             <label>IPX Profile</label>
                             <select id="ipx-profile" onchange="updateFormVisibility()">
-                                <option value="tcp" selected>tcp</option>
+                                <option value="tcp">tcp</option>
                                 <option value="icmp">icmp (Ping Tunnel)</option>
                                 <option value="udp">udp</option>
                                 <option value="ipip">ipip</option>
                                 <option value="gre">gre</option>
                                 <option value="bip">bip</option>
+                                <option value="fou">fou (Foo-over-UDP)</option>
+                                <option value="icmp_fou" selected>icmp_fou (Hybrid ICMP over FOU - Ultra Speed)</option>
                             </select>
                         </div>
                     </div>
