@@ -420,7 +420,7 @@ AVAILABLE_PROFILES=("icmp" "ipip" "udp" "tcp" "gre" "bip")
 colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
-CONFIG[ipx_profile]="${"CONFIG[ipx_profile]",,}"
+CONFIG[ipx_profile]="${CONFIG[ipx_profile],,}"
 for profile in "${AVAILABLE_PROFILES[@]}"; do
 if [[ "${CONFIG[ipx_profile]}" == "$profile" ]]; then
 break 2
