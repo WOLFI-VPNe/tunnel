@@ -54,7 +54,7 @@ local value="${!var_name}"
 if [[ "$value" == "true" || "$value" == "false" ]]; then
 break
 fi
-colorize red "Invalid input. Please enter '\''true'\'' or '\''false'\''."
+colorize red "Invalid input. Please enter 'true' or 'false'."
 done
 }
 validate_cidr() {
@@ -62,8 +62,8 @@ local cidr="$1"
 if [[ ! "$cidr" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]{1,2})$ ]]; then
 return 1
 fi
-IFS='\''/'\'' read -r ip mask <<< "$cidr"
-IFS='\''.'\'' read -r a b c d <<< "$ip"
+IFS='/' read -r ip mask <<< "$cidr"
+IFS='.' read -r a b c d <<< "$ip"
 if (( a<0 || a>255 || b<0 || b>255 || c<0 || c>255 || d<0 || d>255 )); then
 return 1
 fi
@@ -216,7 +216,7 @@ local is_ipx="false"
 colorize blue "━━━ Transport Configuration ━━━" bold
 local valid_transports=(tcp tcpmux xtcpmux ws wss wsmux wssmux xwsmux anytls tun)
 echo "Available transports:"
-printf '\''  • %s\n'\'' "${valid_transports[@]}"
+printf '  • %s\n' "${valid_transports[@]}"
 while true; do
 echo -ne "Select transport: "
 read -r CONFIG[transport_type]
@@ -227,7 +227,7 @@ if [[ "${CONFIG[transport_type]}" == "tun" ]]; then
 echo
 local encapsulations=(tcp ipx)
 echo "Available encapsulations:"
-printf '\''  • %s\n'\'' "${encapsulations[@]}"
+printf '  • %s\n' "${encapsulations[@]}"
 while true; do
 echo -ne "Select encapsulation: "
 read -r CONFIG[tun_encapsulation]
@@ -398,7 +398,7 @@ read -r CONFIG[ports_mapping]
 echo ""
 else
 colorize blue "━━━ Port Mapping Configuration (tun helper) ━━━" bold
-colorize magenta "Forwarder: use '\''bwolfi'\'' for TCP support only, or '\''iptables'\'' for TCP + UDP support"
+colorize magenta "Forwarder: use 'bwolfi' for TCP support only, or 'iptables' for TCP + UDP support"
 prompt_with_default "Forwarder (wolfi/iptables)" "wolfi" CONFIG[forwarder]
 echo ""
 colorize green "Supported formats:"
@@ -438,7 +438,7 @@ break
 fi
 colorize red "Destination IP cannot be empty."
 done
-interface=$(ip route show default | awk '\''{print $5}'\'')
+interface=$(ip route show default | awk '{print $5}')
 prompt_with_default "Network Interface" $interface CONFIG[ipx_interface]
 if [[ "${CONFIG[ipx_profile]}" == "icmp" ]]; then
 prompt_with_default "ICMP Type" "0" CONFIG[ipx_icmp_type]
@@ -554,7 +554,7 @@ if [[ "$mode" == "server" ]] ; then
 echo "[ports]"
 [[ -n "${CONFIG[forwarder]}" ]]  && echo "forwarder = \"${CONFIG[forwarder]}\""
 echo "mapping = ["
-IFS='\'','\'' read -r -a ports <<< "${CONFIG[ports_mapping]}"
+IFS=',' read -r -a ports <<< "${CONFIG[ports_mapping]}"
 for port in "${ports[@"]"; do
 [[ -n "$port" ]] && echo "    \"${port// /}\","
 done
@@ -593,9 +593,9 @@ prompt_logging_section
 prompt_ports_section "$mode" "$is_tun"
 local tunnel_port
 if [[ "$mode" == "server" ]]; then
-tunnel_port=$(echo "${CONFIG[bind_addr]}" | grep -oP '\'':\K[0-9]+$'\'')
+tunnel_port=$(echo "${CONFIG[bind_addr]}" | grep -oP ':\K[0-9]+$')
 else
-tunnel_port=$(echo "${CONFIG[remote_addr]}" | grep -oP '\'':\K[0-9]+$'\'')
+tunnel_port=$(echo "${CONFIG[remote_addr]}" | grep -oP ':\K[0-9]+$')
 fi
 if [[ -z "$tunnel_port" ]]; then
 tunnel_port=$(echo "${CONFIG[tun_health_port]}")
@@ -620,7 +620,7 @@ local type="$1"
 local port="$2"
 local config_file="$3"
 local service_file="${service_dir}/wolfi-${type}${port}.service"
-local desc_type="$(tr '\''[:lower:]'\'' '\''[:upper:]'\'' <<< "${type:0:1}")${type:1}"
+local desc_type="$(tr '[:lower:]' '[:upper:]' <<< "${type:0:1}")${type:1}"
 cat > "$service_file" <<EOF
 [Unit]
 Description=WOLFI $desc_type Port $port
@@ -643,9 +643,9 @@ systemctl daemon-reload
 systemctl enable --now "wolfi-${type}${port}.service" >/dev/null 2>&1
 colorize green "✔ Service wolfi-${type}${port} created and started" bold
 }
-SERVER_IP=$(hostname -I | awk '\''{print $1}'\'')
-SERVER_COUNTRY=$(curl -sS --max-time 1 "http://ipwhois.app/json/$SERVER_IP" 2>/dev/null | jq -r '\''.country'\'')
-SERVER_ISP=$(curl -sS --max-time 1 "http://ipwhois.app/json/$SERVER_IP" 2>/dev/null | jq -r '\''.isp'\'')
+SERVER_IP=$(hostname -I | awk '{print $1}')
+SERVER_COUNTRY=$(curl -sS --max-time 1 "http://ipwhois.app/json/$SERVER_IP" 2>/dev/null | jq -r '.country')
+SERVER_ISP=$(curl -sS --max-time 1 "http://ipwhois.app/json/$SERVER_IP" 2>/dev/null | jq -r '.isp')
 display_logo() {
 echo -e "[36m"
 cat << "EOF"
@@ -712,7 +712,7 @@ service_file="${entry%%:*}"
 location="${entry#*:}"; location="${location%%:*}"
 tunnel_port="${entry##*:}"
 config_file="${config_dir}/${location}${tunnel_port}.toml"
-desc_loc="$(tr '\''[:lower:]'\'' '\''[:upper:]'\'' <<< "${location:0:1}")${location:1}"
+desc_loc="$(tr '[:lower:]' '[:upper:]' <<< "${location:0:1}")${location:1}"
 cat > "$service_file" <<EOF
 [Unit]
 Description=WOLFI $desc_loc Port $tunnel_port
@@ -889,7 +889,7 @@ SCRIPT_URL="http://79.175.167.114/wolfi.sh"
 [ -f "$DEST_DIR/$WOLFI_SCRIPT" ] && rm "$DEST_DIR/$WOLFI_SCRIPT"
 if curl -s -L -o "$DEST_DIR/$WOLFI_SCRIPT" "$SCRIPT_URL"; then
 chmod +x "$DEST_DIR/$WOLFI_SCRIPT"
-colorize yellow "Type '\''wolfi'\'' to run the script." bold
+colorize yellow "Type 'wolfi' to run the script." bold
 exit 0
 else
 colorize red "Download failed."
