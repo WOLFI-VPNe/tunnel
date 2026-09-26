@@ -123,7 +123,7 @@ exit 1
 esac
 DOWNLOAD_DIR=$(mktemp -d)
 echo "Downloading WOLFI..."
-if ! curl -sSL --max-time 10 -o "$DOWNLOAD_DIR/wolfi.tar.gz" "$PRIMARY_URLthen
+if ! curl -sSL --max-time 10 -o "$DOWNLOAD_DIR/wolfi.tar.gz" "$PRIMARY_URL"; then
 colorize yellow "Primary download failed. Trying fallback..."
 curl -sSL --max-time 30 -o "$DOWNLOAD_DIR/wolfi.tar.gz" "$FALLBACK_URL" || {
 colorize red "Download failed."
@@ -177,7 +177,7 @@ echo ""
 VALID_ALGORITHMS=("aes-256-gcm" "chacha20-poly1305" "aes-128-gcm")
 is_valid_algorithm() {
 local input="$1"
-for alg in "${VALID_ALGORITHMS[@]} do
+for alg in "${VALID_ALGORITHMS[@"]"; do
 if [[ "$input" == "$alg" ]]; then
 return 0
 fi
@@ -299,7 +299,7 @@ colorize red "Invalid CIDR. Network address should be: $suggested"
 done
 while true; do
 prompt_with_default "TUN Remote Address (CIDR)" "$default_remote" CONFIG[tun_remote_addr]
-if validate_cidr "${CONFIG[tun_remote_addr]}hen
+if validate_cidr "${CONFIG[tun_remote_addr]}"; then
 break
 fi
 colorize red "Invalid CIDR format."
@@ -421,7 +421,7 @@ colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" CONFIG[ipx_profile]
 CONFIG[ipx_profile]="${CONFIG[ipx_profile],,}"
-for profile in "${AVAILABLE_PROFILES[@]}o
+for profile in "${AVAILABLE_PROFILES[@"]"; do
 if [[ "${CONFIG[ipx_profile]}" == "$profile" ]]; then
 break 2
 fi
@@ -555,7 +555,7 @@ echo "[ports]"
 [[ -n "${CONFIG[forwarder]}" ]]  && echo "forwarder = \"${CONFIG[forwarder]}\""
 echo "mapping = ["
 IFS='\'','\'' read -r -a ports <<< "${CONFIG[ports_mapping]}"
-for port in "${ports[@]}o
+for port in "${ports[@"]"; do
 [[ -n "$port" ]] && echo "    \"${port// /}\","
 done
 echo "]"
@@ -698,18 +698,18 @@ done
 [[ ${#missing_services[@]} -eq 0 ]] && return 0
 echo
 colorize red "Missing service files:" bold
-for entry in "${missing_services[@]}o
+for entry in "${missing_services[@"]"; do
 service_file="${entry%%:*}"
-location="${entry#*:}location="${location%%:*}"
+location="${entry#*:}"; location="${location%%:*}"
 tunnel_port="${entry##*:}"
 echo "- $service_file (type: $location, port: $tunnel_port)"
 done
 echo
 read -r -p "Do you want to create missing service files? (y/n): " confirm
 if [[ "$confirm" =~ ^[Yy]$ ]]; then
-for entry in "${missing_services[@]}o
+for entry in "${missing_services[@"]"; do
 service_file="${entry%%:*}"
-location="${entry#*:}location="${location%%:*}"
+location="${entry#*:}"; location="${location%%:*}"
 tunnel_port="${entry##*:}"
 config_file="${config_dir}/${location}${tunnel_port}.toml"
 desc_loc="$(tr '\''[:lower:]'\'' '\''[:upper:]'\'' <<< "${location:0:1}")${location:1}"
@@ -756,14 +756,14 @@ config_name="${config_name%.toml}"
 service_name="wolfi-${config_name}.service"
 if [[ "$config_name" =~ ^iran([0-9]+)$ ]]; then
 port="${BASH_REMATCH[1]}"
-if systemctl is-active --quiet "$service_namethen
+if systemctl is-active --quiet "$service_name"; then
 colorize green "Iran service (port $port) is running"
 else
 colorize red "Iran service (port $port) is not running"
 fi
 elif [[ "$config_name" =~ ^kharej([0-9]+)$ ]]; then
 port="${BASH_REMATCH[1]}"
-if systemctl is-active --quiet "$service_namethen
+if systemctl is-active --quiet "$service_name"; then
 colorize green "Kharej service (port $port) is running"
 else
 colorize red "Kharej service (port $port) is not running"
@@ -849,7 +849,7 @@ press_key
 restart_service() {
 echo
 colorize yellow "Restarting $1" bold
-if systemctl list-units --type=service | grep -q "$1hen
+if systemctl list-units --type=service | grep -q "$1"; then
 systemctl restart "$1"
 colorize green "Service restarted successfully" bold
 echo
@@ -887,7 +887,7 @@ DEST_DIR="/usr/bin/"
 WOLFI_SCRIPT="wolfi"
 SCRIPT_URL="http://79.175.167.114/wolfi.sh"
 [ -f "$DEST_DIR/$WOLFI_SCRIPT" ] && rm "$DEST_DIR/$WOLFI_SCRIPT"
-if curl -s -L -o "$DEST_DIR/$WOLFI_SCRIPT" "$SCRIPT_URL then
+if curl -s -L -o "$DEST_DIR/$WOLFI_SCRIPT" "$SCRIPT_URL"; then
 chmod +x "$DEST_DIR/$WOLFI_SCRIPT"
 colorize yellow "Type '\''wolfi'\'' to run the script." bold
 exit 0
