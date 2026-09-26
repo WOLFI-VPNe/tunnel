@@ -201,7 +201,7 @@ colorize red "Invalid algorithm selected. Please choose one from the list."
 echo
 fi
 done
-prompt_with_default "PSK (32-char base64)" "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=" "CONFIG[psk]"
+prompt_with_default "PSK 32-char base64" "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=" "CONFIG[psk]"
 prompt_with_default "KDF Iterations" "100000" "CONFIG[kdf_iterations]"
 fi
 else
@@ -267,7 +267,7 @@ if [[ ! "$transport" =~ mux$ ]]; then
 return
 fi
 colorize blue "━━━ Mux Configuration ━━━" bold
-prompt_with_default "Mux Version [1 or 2]" "2" "CONFIG[mux_version]"
+prompt_with_default "Mux Version 1 or 2" "2" "CONFIG[mux_version]"
 prompt_with_default "Mux Concurrency" "8" "CONFIG[mux_concurrency]"
 CONFIG[mux_framesize]="32768"
 CONFIG[mux_recievebuffer]="4194304"
@@ -290,7 +290,7 @@ default_local="10.10.10.2/24"
 default_remote="10.10.10.1/24"
 fi
 while true; do
-prompt_with_default "TUN Local Address (CIDR)" "$default_local" "CONFIG[tun_local_addr]"
+prompt_with_default "TUN Local Address CIDR" "$default_local" "CONFIG[tun_local_addr]"
 if validate_cidr "${CONFIG[tun_local_addr]}"; then
 break
 fi
@@ -298,7 +298,7 @@ local suggested=$(validate_cidr "${CONFIG[tun_local_addr]}" 2>&1)
 colorize red "Invalid CIDR. Network address should be: $suggested"
 done
 while true; do
-prompt_with_default "TUN Remote Address (CIDR)" "$default_remote" "CONFIG[tun_remote_addr]"
+prompt_with_default "TUN Remote Address CIDR" "$default_remote" "CONFIG[tun_remote_addr]"
 if validate_cidr "${CONFIG[tun_remote_addr]}"; then
 break
 fi
@@ -344,7 +344,7 @@ prompt_boolean "Enable Auto Tuning" "true" "CONFIG[auto_tuning]"
 echo
 colorize magenta "Profiles: balanced, fast, latency, resource" normal
 prompt_with_default "Kernel Tuning Profile" "balanced" "CONFIG[tuning_profile]"
-prompt_with_default "Workers (0 = auto)" "0" "CONFIG[workers]"
+prompt_with_default "Workers [0 = auto]" "0" "CONFIG[workers]"
 if [[ "$is_tun" != "true" ]]; then
 prompt_with_default "Channel Size" "4096" "CONFIG[channel_size]"
 fi
@@ -353,11 +353,11 @@ CONFIG[channel_size]="10_000"
 fi
 if [[ "$is_ipx" == "true" ]]; then
 prompt_with_default "Batch Size" "2048" "CONFIG[batch_size]"
-prompt_with_default "SO_SNDBUF (0 = auto)" "0" "CONFIG[so_sndbuf]"
+prompt_with_default "SO_SNDBUF [0 = auto]" "0" "CONFIG[so_sndbuf]"
 else
-prompt_with_default "TCP MSS (0 = auto)" "0" "CONFIG[tcp_mss]"
-prompt_with_default "SO_RCVBUF (0 = auto)" "0" "CONFIG[so_rcvbuf]"
-prompt_with_default "SO_SNDBUF (0 = auto)" "0" "CONFIG[so_sndbuf]"
+prompt_with_default "TCP MSS [0 = auto]" "0" "CONFIG[tcp_mss]"
+prompt_with_default "SO_RCVBUF [0 = auto]" "0" "CONFIG[so_rcvbuf]"
+prompt_with_default "SO_SNDBUF [0 = auto]" "0" "CONFIG[so_sndbuf]"
 fi
 if [[ "$is_tun" != "true" ]] && [[ "$is_ipx" != "true" ]]; then
 echo
