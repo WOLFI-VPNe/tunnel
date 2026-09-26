@@ -129,6 +129,10 @@ exit 1
 fi
 mkdir -p "$config_dir"
 tar -xzf "$DOWNLOAD_DIR/wolfi.tar.gz" -C "$config_dir"
+if [[ -d "${config_dir}/wolfi-core" ]]; then
+    cp -rf "${config_dir}/wolfi-core/"* "${config_dir}/" 2>/dev/null || true
+    rm -rf "${config_dir}/wolfi-core"
+fi
 chmod u+x "${config_dir}/wolfi_premium"
 colorize green "WOLFI installation completed."
 }
@@ -142,14 +146,14 @@ prompt_connection_section() {
 local mode="$1"  # server or client
 colorize blue "━━━ Connection Configuration ━━━" bold
 if [[ "$mode" == "server" ]]; then
-prompt_with_default "Bind Address" ":8443" CONFIG[bind_addr]
+prompt_with_default "Bind Address" ":8443" "CONFIG[bind_addr]"
 if [[ -n "${CONFIG[bind_addr]}" && "${CONFIG[bind_addr]}" != *:* ]]; then
 CONFIG[bind_addr]=":${CONFIG[bind_addr]}"
 fi
 else
 while true; do
 echo -ne "[*] IRAN Server Address [IP:Port] or [Domain:Port]: "
-read -r CONFIG[remote_addr]
+read -r "CONFIG[remote_addr]"
 if [[ -z "${CONFIG[remote_addr]}" ]]; then
 colorize red "Server address cannot be empty."
 continue
@@ -163,7 +167,7 @@ fi
 done
 if [[ "${CONFIG[transport_type]}" == "ws" || "${CONFIG[transport_type]}" == "wss" || "${CONFIG[transport_type]}" == "wsmux" || "${CONFIG[transport_type]}" == "wssmux" || "${CONFIG[transport_type]}" == "xwsmux" ]]; then
 echo -ne "[-] Edge IP/Domain (optional, press Enter to skip): "
-read -r CONFIG[edge_ip]
+read -r "CONFIG[edge_ip]"
 fi
 CONFIG[dial_timeout]="10"
 CONFIG[retry_interval]="3"
@@ -184,12 +188,12 @@ prompt_security_section() {
 local is_ipx="$1"
 colorize blue "━━━ Security Configuration ━━━" bold
 if [[ "$is_ipx" == "true" ]]; then
-prompt_boolean "Enable Encryption" "true" CONFIG[enable_encryption]
+prompt_boolean "Enable Encryption" "true" "CONFIG[enable_encryption]"
 if [[ "${CONFIG[enable_encryption]}" == "true" ]]; then
 echo
 while true; do
 colorize magenta "Available algorithms: aes-256-gcm, chacha20-poly1305, aes-128-gcm"
-prompt_with_default "Algorithm" "aes-256-gcm" CONFIG[algorithm]
+prompt_with_default "Algorithm" "aes-256-gcm" "CONFIG[algorithm]"
 if is_valid_algorithm "${CONFIG[algorithm]}"; then
 break
 else
@@ -197,11 +201,11 @@ colorize red "Invalid algorithm selected. Please choose one from the list."
 echo
 fi
 done
-prompt_with_default "PSK (32-char base64)" "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=" CONFIG[psk]
-prompt_with_default "KDF Iterations" "100000" CONFIG[kdf_iterations]
+prompt_with_default "PSK (32-char base64)" "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=" "CONFIG[psk]"
+prompt_with_default "KDF Iterations" "100000" "CONFIG[kdf_iterations]"
 fi
 else
-prompt_with_default "Security Token" "your_token" CONFIG[token]
+prompt_with_default "Security Token" "your_token" "CONFIG[token]"
 CONFIG[enable_encryption]="false"
 fi
 echo ""
@@ -215,7 +219,7 @@ echo "Available transports:"
 printf '  • %s\n' "${valid_transports[@]}"
 while true; do
 echo -ne "Select transport: "
-read -r CONFIG[transport_type]
+read -r "CONFIG[transport_type]"
 [[ " ${valid_transports[*]} " =~ " ${CONFIG[transport_type]} " ]] && break
 colorize red "Invalid transport."
 done
@@ -226,7 +230,7 @@ echo "Available encapsulations:"
 printf '  • %s\n' "${encapsulations[@]}"
 while true; do
 echo -ne "Select encapsulation: "
-read -r CONFIG[tun_encapsulation]
+read -r "CONFIG[tun_encapsulation]"
 [[ " ${encapsulations[*]} " =~ " ${CONFIG[tun_encapsulation]} " ]] && break
 colorize red "Invalid encapsulation."
 done
@@ -236,18 +240,18 @@ if [[ "${CONFIG[tun_encapsulation]}" == "ipx" ]]; then
 is_ipx="true"
 fi
 if [[ "$is_ipx" != "true" ]]; then
-prompt_boolean "Enable TCP_NODELAY" "true" CONFIG[nodelay]
+prompt_boolean "Enable TCP_NODELAY" "true" "CONFIG[nodelay]"
 fi
 if [[ "$mode" == "server" ]]; then
 if [[ "${CONFIG[transport_type]}" == "tcp" ]]; then
-prompt_boolean "Accept UDP over TCP" "false" CONFIG[accept_udp]
+prompt_boolean "Accept UDP over TCP" "false" "CONFIG[accept_udp]"
 fi
 if [[ ! "${CONFIG[transport_type]}" =~ ^(tun|ws)$ ]] && [[ "$is_ipx" != "true" ]]; then
-prompt_boolean "Enable Proxy Protocol" "false" CONFIG[proxy_protocol]
+prompt_boolean "Enable Proxy Protocol" "false" "CONFIG[proxy_protocol]"
 fi
 else
 if [[ "${CONFIG[transport_type]}" != "tun" ]]; then
-prompt_with_default "Connection Pool" "8" CONFIG[connection_pool]
+prompt_with_default "Connection Pool" "8" "CONFIG[connection_pool]"
 fi
 fi
 CONFIG[heartbeat_interval]="10"
@@ -263,8 +267,8 @@ if [[ ! "$transport" =~ mux$ ]]; then
 return
 fi
 colorize blue "━━━ Mux Configuration ━━━" bold
-prompt_with_default "Mux Version [1 or 2]" "2" CONFIG[mux_version]
-prompt_with_default "Mux Concurrency" "8" CONFIG[mux_concurrency]
+prompt_with_default "Mux Version [1 or 2]" "2" "CONFIG[mux_version]"
+prompt_with_default "Mux Concurrency" "8" "CONFIG[mux_concurrency]"
 CONFIG[mux_framesize]="32768"
 CONFIG[mux_recievebuffer]="4194304"
 CONFIG[mux_streambuffer]="2097152"
@@ -276,7 +280,7 @@ local mode="$2"
 local is_ipx="$3"
 [[ "$transport" != "tun" ]] && return
 colorize blue "━━━ TUN Configuration ━━━" bold
-prompt_with_default "TUN Device Name" "wolfi" CONFIG[tun_name]
+prompt_with_default "TUN Device Name" "wolfi" "CONFIG[tun_name]"
 local default_local default_remote
 if [[ "$mode" == "server" ]]; then
 default_local="10.10.10.1/24"
@@ -286,7 +290,7 @@ default_local="10.10.10.2/24"
 default_remote="10.10.10.1/24"
 fi
 while true; do
-prompt_with_default "TUN Local Address (CIDR)" "$default_local" CONFIG[tun_local_addr]
+prompt_with_default "TUN Local Address (CIDR)" "$default_local" "CONFIG[tun_local_addr]"
 if validate_cidr "${CONFIG[tun_local_addr]}"; then
 break
 fi
@@ -294,17 +298,17 @@ local suggested=$(validate_cidr "${CONFIG[tun_local_addr]}" 2>&1)
 colorize red "Invalid CIDR. Network address should be: $suggested"
 done
 while true; do
-prompt_with_default "TUN Remote Address (CIDR)" "$default_remote" CONFIG[tun_remote_addr]
+prompt_with_default "TUN Remote Address (CIDR)" "$default_remote" "CONFIG[tun_remote_addr]"
 if validate_cidr "${CONFIG[tun_remote_addr]}"; then
 break
 fi
 colorize red "Invalid CIDR format."
 done
-prompt_with_default "Health Port" "1234" CONFIG[tun_health_port]
+prompt_with_default "Health Port" "1234" "CONFIG[tun_health_port]"
 if [[ "$is_ipx" == "true" ]]; then
-prompt_with_default "MTU" "1320" CONFIG[tun_mtu]
+prompt_with_default "MTU" "1320" "CONFIG[tun_mtu]"
 else
-prompt_with_default "MTU" "1500" CONFIG[tun_mtu]
+prompt_with_default "MTU" "1500" "CONFIG[tun_mtu]"
 fi
 echo ""
 }
@@ -316,7 +320,7 @@ return
 fi
 colorize blue "━━━ TLS Configuration ━━━" bold
 if [[ "$transport" == "anytls" ]]; then
-prompt_with_default "SNI" "www.digikala.com" CONFIG[tls_sni]
+prompt_with_default "SNI" "www.digikala.com" "CONFIG[tls_sni]"
 fi
 if [[ "$mode" == "client" ]]; then
 echo
@@ -328,45 +332,45 @@ openssl req -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -x509 -days 
 colorize green "[*] Generated $CERT_FILE and $KEY_FILE"
 echo
 fi
-prompt_with_default "TLS Certificate Path" "$CERT_FILE" CONFIG[tls_cert]
-prompt_with_default "TLS Key Path" "$KEY_FILE" CONFIG[tls_key]
+prompt_with_default "TLS Certificate Path" "$CERT_FILE" "CONFIG[tls_cert]"
+prompt_with_default "TLS Key Path" "$KEY_FILE" "CONFIG[tls_key]"
 echo ""
 }
 prompt_tuning_section() {
 local is_ipx="$1"
 local is_tun="$2"
 colorize blue "━━━ Tuning Configuration ━━━" bold
-prompt_boolean "Enable Auto Tuning" "true" CONFIG[auto_tuning]
+prompt_boolean "Enable Auto Tuning" "true" "CONFIG[auto_tuning]"
 echo
 colorize magenta "Profiles: balanced, fast, latency, resource" normal
-prompt_with_default "Kernel Tuning Profile" "balanced" CONFIG[tuning_profile]
-prompt_with_default "Workers (0 = auto)" "0" CONFIG[workers]
+prompt_with_default "Kernel Tuning Profile" "balanced" "CONFIG[tuning_profile]"
+prompt_with_default "Workers (0 = auto)" "0" "CONFIG[workers]"
 if [[ "$is_tun" != "true" ]]; then
-prompt_with_default "Channel Size" "4096" CONFIG[channel_size]
+prompt_with_default "Channel Size" "4096" "CONFIG[channel_size]"
 fi
 if [[ "$is_tun" == "true" ]]; then
 CONFIG[channel_size]="10_000"
 fi
 if [[ "$is_ipx" == "true" ]]; then
-prompt_with_default "Batch Size" "2048" CONFIG[batch_size]
-prompt_with_default "SO_SNDBUF (0 = auto)" "0" CONFIG[so_sndbuf]
+prompt_with_default "Batch Size" "2048" "CONFIG[batch_size]"
+prompt_with_default "SO_SNDBUF (0 = auto)" "0" "CONFIG[so_sndbuf]"
 else
-prompt_with_default "TCP MSS (0 = auto)" "0" CONFIG[tcp_mss]
-prompt_with_default "SO_RCVBUF (0 = auto)" "0" CONFIG[so_rcvbuf]
-prompt_with_default "SO_SNDBUF (0 = auto)" "0" CONFIG[so_sndbuf]
+prompt_with_default "TCP MSS (0 = auto)" "0" "CONFIG[tcp_mss]"
+prompt_with_default "SO_RCVBUF (0 = auto)" "0" "CONFIG[so_rcvbuf]"
+prompt_with_default "SO_SNDBUF (0 = auto)" "0" "CONFIG[so_sndbuf]"
 fi
 if [[ "$is_tun" != "true" ]] && [[ "$is_ipx" != "true" ]]; then
 echo
 colorize magenta "Buffer Profiles: extreme_low_cpu, ultra_low_cpu, low_cpu, balanced, low_memory" normal
-prompt_with_default "Buffer Profile" "balanced" CONFIG[buffer_profile]
-prompt_with_default "Read Timeout" "120" CONFIG[read_timeout]
+prompt_with_default "Buffer Profile" "balanced" "CONFIG[buffer_profile]"
+prompt_with_default "Read Timeout" "120" "CONFIG[read_timeout]"
 fi
 echo ""
 }
 prompt_logging_section() {
 colorize blue "━━━ Logging Configuration ━━━" bold
 colorize magenta "Levels: panic, fatal, error, warn, info, debug, trace"
-prompt_with_default "Log Level" "info" CONFIG[log_level]
+prompt_with_default "Log Level" "info" "CONFIG[log_level]"
 echo ""
 }
 prompt_accept_udp_section() {
@@ -390,19 +394,19 @@ echo "  3. 443-600       - Listen on range 443-600"
 echo "  4. 443-600:5201  - Range forwarding to 5201"
 echo ""
 echo -ne "Enter port mappings (comma-separated): "
-read -r CONFIG[ports_mapping]
+read -r "CONFIG[ports_mapping]"
 echo ""
 else
 colorize blue "━━━ Port Mapping Configuration (tun helper) ━━━" bold
 colorize magenta "Forwarder: use 'bwolfi' for TCP support only, or 'iptables' for TCP + UDP support"
-prompt_with_default "Forwarder (wolfi/iptables)" "wolfi" CONFIG[forwarder]
+prompt_with_default "Forwarder (wolfi/iptables)" "wolfi" "CONFIG[forwarder]"
 echo ""
 colorize green "Supported formats:"
 echo "  1. 443           - Listen on 443, forward to 443"
 echo "  2. 443=5000      - Listen on 443, forward to 5000"
 echo ""
 echo -ne "Enter port mappings (comma-separated): "
-read -r CONFIG[ports_mapping]
+read -r "CONFIG[ports_mapping]"
 echo ""
 fi
 }
@@ -415,8 +419,8 @@ CONFIG[ipx_mode]="$mode"
 AVAILABLE_PROFILES=("icmp" "ipip" "udp" "tcp" "gre" "bip")
 colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
-prompt_with_default "Profile" "tcp" CONFIG[ipx_profile]
-CONFIG[ipx_profile]="${CONFIG[ipx_profile],,}"
+prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
+CONFIG[ipx_profile]="${"CONFIG[ipx_profile]",,}"
 for profile in "${AVAILABLE_PROFILES[@"]"; do
 if [[ "${CONFIG[ipx_profile]}" == "$profile" ]]; then
 break 2
@@ -426,19 +430,19 @@ colorize red "Invalid profile: ${CONFIG[ipx_profile]}"
 echo
 colorize yellow "Please choose one of: ${AVAILABLE_PROFILES[*]}"
 done
-prompt_with_default "Listen IP" $SERVER_IP CONFIG[ipx_listen_ip]
+prompt_with_default "Listen IP" $SERVER_IP "CONFIG[ipx_listen_ip]"
 while :; do
-prompt_with_default "Destination IP" "" CONFIG[ipx_dst_ip]
+prompt_with_default "Destination IP" "" "CONFIG[ipx_dst_ip]"
 if [[ -n "${CONFIG[ipx_dst_ip]}" ]]; then
 break
 fi
 colorize red "Destination IP cannot be empty."
 done
 interface=$(ip route show default | awk '{print $5}')
-prompt_with_default "Network Interface" $interface CONFIG[ipx_interface]
+prompt_with_default "Network Interface" $interface "CONFIG[ipx_interface]"
 if [[ "${CONFIG[ipx_profile]}" == "icmp" ]]; then
-prompt_with_default "ICMP Type" "0" CONFIG[ipx_icmp_type]
-prompt_with_default "ICMP Code" "0" CONFIG[ipx_icmp_code]
+prompt_with_default "ICMP Type" "0" "CONFIG[ipx_icmp_type]"
+prompt_with_default "ICMP Code" "0" "CONFIG[ipx_icmp_code]"
 fi
 echo ""
 }
