@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WOLFI - Advanced Web Management Panel</title>
+    <title>WOLFI - Cyber Dark Management Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="background-effects">
+        <div class="glow-orb cyan"></div>
+        <div class="glow-orb purple"></div>
+    </div>
+
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -17,14 +22,14 @@
                 <div class="brand-logo">🐺</div>
                 <div class="brand-text">
                     <h2>WOLFI</h2>
-                    <span class="badge-tag">PREMIUM CORE</span>
+                    <span class="badge-tag">CYBER PREMIUM CORE</span>
                 </div>
             </div>
 
             <nav class="nav-menu">
                 <a href="#" class="nav-item active" onclick="switchMainTab('overview')">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    Overview & Tunnels
+                    Tunnels & Health
                 </a>
                 <a href="#" class="nav-item" onclick="openCreateModal()">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -49,8 +54,8 @@
             <!-- Header -->
             <header class="top-header">
                 <div class="header-title">
-                    <h1>WOLFI Tunnel Management</h1>
-                    <p>Comprehensive Reverse Tunnel Control, Tuning & Real-Time Latency Testing</p>
+                    <h1>WOLFI Cyber Management Console</h1>
+                    <p>High-Speed Reverse Tunnel Control, Real-Time Latency Ping & Advanced Scoping</p>
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-primary" onclick="openCreateModal()">
@@ -64,17 +69,17 @@
                 </div>
             </header>
 
-            <!-- Metrics Grid -->
+            <!-- Stats Grid -->
             <section class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card cyan-glow">
                     <div class="stat-icon cyan">🌐</div>
                     <div class="stat-details">
-                        <span class="stat-label">Server IP</span>
+                        <span class="stat-label">Server IP Address</span>
                         <h3 id="stat-ip">Loading...</h3>
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card emerald-glow">
                     <div class="stat-icon emerald">⚡</div>
                     <div class="stat-details">
                         <span class="stat-label">Active Tunnels</span>
@@ -82,28 +87,28 @@
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card purple-glow">
                     <div class="stat-icon violet">🛡️</div>
                     <div class="stat-details">
-                        <span class="stat-label">Core Engine</span>
+                        <span class="stat-label">WOLFI Core Engine</span>
                         <h3 id="stat-version">v1.0.0 Premium</h3>
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card rose-glow">
                     <div class="stat-icon rose">🔌</div>
                     <div class="stat-details">
-                        <span class="stat-label">Panel Service</span>
+                        <span class="stat-label">Web Panel Service</span>
                         <h3>Port 4000</h3>
                     </div>
                 </div>
             </section>
 
-            <!-- Tunnels Grid Section -->
+            <!-- Active Tunnels Section -->
             <section class="content-section">
                 <div class="section-header">
-                    <h2>Active Tunnel Services</h2>
-                    <span class="subtitle">Live systemd services, connection health status & latency metrics</span>
+                    <h2>Active Tunnel Services & Connection Status</h2>
+                    <span class="subtitle">Live Systemd unit status, protocol details & latency ping test</span>
                 </div>
 
                 <div id="tunnels-list" class="tunnels-grid">
@@ -113,19 +118,19 @@
         </main>
     </div>
 
-    <!-- Advanced Multi-Tab Create Tunnel Wizard Modal -->
+    <!-- Smart Multi-Tab Create Tunnel Wizard Modal -->
     <div id="create-modal" class="modal-overlay hidden">
         <div class="modal-card extra-wide">
             <div class="modal-header">
-                <h3>WOLFI Advanced Tunnel Creation Wizard</h3>
+                <h3>WOLFI Smart Creation Wizard</h3>
                 <button class="close-btn" onclick="closeCreateModal()">&times;</button>
             </div>
 
-            <!-- Wizard Navigation Tabs -->
+            <!-- Navigation Tabs -->
             <div class="wizard-tabs">
                 <button type="button" class="tab-btn active" onclick="switchWizardTab('tab-basic')">1. Basic & Transport</button>
-                <button type="button" class="tab-btn" onclick="switchWizardTab('tab-security')">2. Security & TLS</button>
-                <button type="button" class="tab-btn" onclick="switchWizardTab('tab-tun-mux')">3. TUN & Mux</button>
+                <button type="button" id="tab-btn-security" class="tab-btn" onclick="switchWizardTab('tab-security')">2. Security & TLS</button>
+                <button type="button" id="tab-btn-tun" class="tab-btn" onclick="switchWizardTab('tab-tun-mux')">3. TUN & Mux</button>
                 <button type="button" class="tab-btn" onclick="switchWizardTab('tab-tuning')">4. Performance Tuning</button>
                 <button type="button" class="tab-btn" onclick="switchWizardTab('tab-ports')">5. Port Mapping</button>
             </div>
@@ -136,140 +141,180 @@
                     <div class="form-group">
                         <label>Tunnel Mode</label>
                         <div class="segmented-control">
-                            <input type="radio" id="mode-server" name="mode" value="server" checked onchange="toggleWizardFields()">
+                            <input type="radio" id="mode-server" name="mode" value="server" checked onchange="updateFormVisibility()">
                             <label for="mode-server">IRAN (Server / Listener)</label>
                             
-                            <input type="radio" id="mode-client" name="mode" value="client" onchange="toggleWizardFields()">
+                            <input type="radio" id="mode-client" name="mode" value="client" onchange="updateFormVisibility()">
                             <label for="mode-client">KHAREJ (Client / Dialer)</label>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Port / Bind Address</label>
+                        <div class="form-group" id="group-bind-port">
+                            <label id="lbl-bind-port">Bind Port / Listener Address</label>
                             <input type="text" id="tunnel-port" value="8443" placeholder="e.g. 8443 or :8443" required>
                         </div>
+
                         <div class="form-group">
                             <label>Transport Type</label>
-                            <select id="tunnel-transport" onchange="toggleWizardFields()">
-                                <option value="tcp">TCP</option>
-                                <option value="tcpmux" selected>TCP Mux</option>
-                                <option value="xtcpmux">xTCP Mux</option>
-                                <option value="ws">WebSocket (WS)</option>
-                                <option value="wss">WebSocket Secure (WSS)</option>
-                                <option value="wsmux">WS Mux</option>
-                                <option value="wssmux">WSS Mux</option>
-                                <option value="xwsmux">xWS Mux</option>
-                                <option value="anytls">AnyTLS</option>
-                                <option value="tun">TUN Virtual Adapter</option>
+                            <select id="tunnel-transport" onchange="updateFormVisibility()">
+                                <option value="tcp" selected>tcp</option>
+                                <option value="tcpmux">tcpmux</option>
+                                <option value="xtcpmux">xtcpmux</option>
+                                <option value="ws">ws (WebSocket)</option>
+                                <option value="wss">wss (WebSocket Secure)</option>
+                                <option value="wsmux">wsmux</option>
+                                <option value="wssmux">wssmux</option>
+                                <option value="xwsmux">xwsmux</option>
+                                <option value="anytls">anytls</option>
+                                <option value="tun">tun (Virtual Adapter)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group" id="group-remote" style="display: none;">
-                        <label>IRAN Server Address (IP:Port or Domain:Port)</label>
-                        <input type="text" id="remote-addr" placeholder="e.g. 1.2.3.4:8443">
+                        <label>IRAN Server Address [IP:Port or Domain:Port]</label>
+                        <input type="text" id="remote-addr" value="1.2.3.4:8443" placeholder="e.g. 1.2.3.4:8443">
                     </div>
 
-                    <div class="form-row" id="group-tun-basic" style="display: none;">
+                    <div class="form-row" id="group-tun-encap" style="display: none;">
                         <div class="form-group">
                             <label>TUN Encapsulation Mode</label>
-                            <select id="tun-encapsulation" onchange="toggleWizardFields()">
-                                <option value="tcp" selected>TCP</option>
-                                <option value="ipx">IPX</option>
+                            <select id="tun-encapsulation" onchange="updateFormVisibility()">
+                                <option value="tcp" selected>tcp</option>
+                                <option value="ipx">ipx</option>
                             </select>
                         </div>
                         <div class="form-group" id="group-ipx-profile" style="display: none;">
                             <label>IPX Profile</label>
-                            <select id="ipx-profile">
-                                <option value="tcp" selected>TCP</option>
-                                <option value="icmp">ICMP (Ping Tunnel)</option>
-                                <option value="udp">UDP</option>
-                                <option value="ipip">IPIP</option>
-                                <option value="gre">GRE</option>
-                                <option value="bip">BIP</option>
+                            <select id="ipx-profile" onchange="updateFormVisibility()">
+                                <option value="tcp" selected>tcp</option>
+                                <option value="icmp">icmp (Ping Tunnel)</option>
+                                <option value="udp">udp</option>
+                                <option value="ipip">ipip</option>
+                                <option value="gre">gre</option>
+                                <option value="bip">bip</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="group-ipx-network" style="display: none;">
+                        <div class="form-group">
+                            <label>Listen IP</label>
+                            <input type="text" id="ipx-listen-ip" value="0.0.0.0">
+                        </div>
+                        <div class="form-group">
+                            <label>Destination IP (IRAN / KHAREJ IP)</label>
+                            <input type="text" id="ipx-dst-ip" value="1.2.3.4" placeholder="e.g. 1.2.3.4">
+                        </div>
+                        <div class="form-group">
+                            <label>Network Interface</label>
+                            <input type="text" id="ipx-interface" value="eth0" placeholder="e.g. eth0">
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="group-icmp-opts" style="display: none;">
+                        <div class="form-group">
+                            <label>ICMP Type</label>
+                            <input type="number" id="ipx-icmp-type" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>ICMP Code</label>
+                            <input type="number" id="ipx-icmp-code" value="0">
                         </div>
                     </div>
                 </div>
 
                 <!-- Tab 2: Security & TLS -->
                 <div id="tab-security" class="tab-pane">
-                    <div class="form-group">
-                        <label>Security Token (Standard Transport)</label>
-                        <input type="text" id="tunnel-token" value="wolfi_secret_token">
+                    <div class="form-group" id="group-token">
+                        <label>Security Token (Standard Transports)</label>
+                        <input type="text" id="tunnel-token" value="your_token">
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Enable Encryption (IPX / Custom)</label>
-                            <select id="enable-encryption">
-                                <option value="true" selected>true (Enabled)</option>
-                                <option value="false">false (Disabled)</option>
-                            </select>
+                    <div id="group-ipx-security" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Enable Encryption (IPX Mode)</label>
+                                <select id="enable-encryption" onchange="updateFormVisibility()">
+                                    <option value="true" selected>true (Enabled)</option>
+                                    <option value="false">false (Disabled)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="group-alg-container">
+                                <label>Algorithm</label>
+                                <select id="algorithm">
+                                    <option value="aes-256-gcm" selected>aes-256-gcm</option>
+                                    <option value="chacha20-poly1305">chacha20-poly1305</option>
+                                    <option value="aes-128-gcm">aes-128-gcm</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Encryption Algorithm</label>
-                            <select id="algorithm">
-                                <option value="aes-256-gcm" selected>aes-256-gcm</option>
-                                <option value="chacha20-poly1305">chacha20-poly1305</option>
-                                <option value="aes-128-gcm">aes-128-gcm</option>
-                            </select>
+
+                        <div class="form-row" id="group-psk-container">
+                            <div class="form-group">
+                                <label>Pre-Shared Key (PSK - 32-char Base64)</label>
+                                <input type="text" id="psk" value="pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=">
+                            </div>
+                            <div class="form-group">
+                                <label>KDF Iterations</label>
+                                <input type="number" id="kdf-iterations" value="100000">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div id="group-tls-section" style="display: none;">
                         <div class="form-group">
-                            <label>Pre-Shared Key (PSK - 32-char Base64)</label>
-                            <input type="text" id="psk" value="pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=">
+                            <label>TLS SNI (Domain Spoofing for AnyTLS / WSS)</label>
+                            <input type="text" id="tls-sni" value="www.digikala.com" placeholder="e.g. www.digikala.com">
                         </div>
-                        <div class="form-group">
-                            <label>KDF Iterations</label>
-                            <input type="number" id="kdf-iterations" value="100000">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>TLS SNI (Domain Spoofing for AnyTLS / WSS)</label>
-                        <input type="text" id="tls-sni" value="www.digikala.com" placeholder="e.g. www.digikala.com">
                     </div>
                 </div>
 
                 <!-- Tab 3: TUN & Mux -->
                 <div id="tab-tun-mux" class="tab-pane">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>TUN Interface Device Name</label>
-                            <input type="text" id="tun-name" value="wolfi">
+                    <div id="group-tun-details" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>TUN Device Name</label>
+                                <input type="text" id="tun-name" value="wolfi">
+                            </div>
+                            <div class="form-group">
+                                <label>Health Port</label>
+                                <input type="number" id="tun-health-port" value="1234">
+                            </div>
                         </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>TUN Local Address CIDR</label>
+                                <input type="text" id="tun-local-addr" value="10.10.10.1/24">
+                            </div>
+                            <div class="form-group">
+                                <label>TUN Remote Address CIDR</label>
+                                <input type="text" id="tun-remote-addr" value="10.10.10.2/24">
+                            </div>
+                        </div>
+
                         <div class="form-group">
-                            <label>Health Port</label>
-                            <input type="number" id="tun-health-port" value="1234">
+                            <label>MTU Size</label>
+                            <input type="number" id="tun-mtu" value="1500">
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>TUN Local Address CIDR</label>
-                            <input type="text" id="tun-local-addr" value="10.10.10.1/24">
-                        </div>
-                        <div class="form-group">
-                            <label>TUN Remote Address CIDR</label>
-                            <input type="text" id="tun-remote-addr" value="10.10.10.2/24">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Mux Version</label>
-                            <select id="mux-version">
-                                <option value="2" selected>Version 2 (Recommended)</option>
-                                <option value="1">Version 1</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Mux Concurrency</label>
-                            <input type="number" id="mux-concurrency" value="8">
+                    <div id="group-mux-details" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mux Version</label>
+                                <select id="mux-version">
+                                    <option value="2" selected>Version 2 (Recommended)</option>
+                                    <option value="1">Version 1</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Mux Concurrency</label>
+                                <input type="number" id="mux-concurrency" value="8">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -286,7 +331,7 @@
                                 <option value="resource">resource</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="group-buffer-profile">
                             <label>Buffer Profile</label>
                             <select id="buffer-profile">
                                 <option value="balanced" selected>balanced</option>
@@ -308,23 +353,16 @@
                             <input type="number" id="channel-size" value="4096">
                         </div>
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Read Timeout (sec)</label>
-                            <input type="number" id="read-timeout" value="120">
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Tab 5: Port Mapping -->
                 <div id="tab-ports" class="tab-pane">
-                    <div class="form-group">
+                    <div class="form-group" id="group-ports-mapping">
                         <label>Port Mappings (comma-separated, e.g., 443, 80=8080, 443-600)</label>
                         <input type="text" id="ports-mapping" value="443" placeholder="e.g. 443, 80=8080, 443-600">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="group-forwarder" style="display: none;">
                         <label>TUN Helper Forwarder</label>
                         <select id="forwarder">
                             <option value="wolfi" selected>wolfi (TCP Only)</option>
@@ -335,7 +373,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create & Save Tunnel</button>
+                    <button type="submit" class="btn btn-primary">Create & Save Config</button>
                 </div>
             </form>
         </div>

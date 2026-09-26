@@ -121,6 +121,7 @@ async function testConnection(tunnelId) {
 function openCreateModal() {
     document.getElementById('create-modal').classList.remove('hidden');
     switchWizardTab('tab-basic');
+    updateFormVisibility();
 }
 
 function closeCreateModal() {
@@ -138,14 +139,63 @@ function switchWizardTab(tabId) {
     if (activePane) activePane.classList.add('active');
 }
 
-function toggleWizardFields() {
-    const isClient = document.getElementById('mode-client').checked;
+function updateFormVisibility() {
+    const isServer = document.getElementById('mode-server').checked;
     const transport = document.getElementById('tunnel-transport').value;
-    const tunEncapsulation = document.getElementById('tun-encapsulation').value;
+    const isTun = (transport === 'tun');
+    const tunEncap = document.getElementById('tun-encapsulation').value;
+    const isIpx = (isTun && tunEncap === 'ipx');
+    const ipxProfile = document.getElementById('ipx-profile').value;
+    const isTls = ['anytls', 'wss', 'wssmux'].includes(transport);
+    const isMux = transport.endsWith('mux');
 
-    document.getElementById('group-remote').style.display = isClient ? 'block' : 'none';
-    document.getElementById('group-tun-basic').style.display = (transport === 'tun') ? 'flex' : 'none';
-    document.getElementById('group-ipx-profile').style.display = (transport === 'tun' && tunEncapsulation === 'ipx') ? 'block' : 'none';
+    // 1. Bind port vs Remote Addr vs IPX (IPX has NO listener/dialer bind port!)
+    const groupBindPort = document.getElementById('group-bind-port');
+    const groupRemote = document.getElementById('group-remote');
+
+    if (isIpx) {
+        groupBindPort.style.display = 'none';
+        groupRemote.style.display = 'none';
+    } else if (isServer) {
+        groupBindPort.style.display = 'block';
+        groupRemote.style.display = 'none';
+    } else {
+        groupBindPort.style.display = 'none';
+        groupRemote.style.display = 'block';
+    }
+
+    // 2. TUN & IPX Encap Options
+    document.getElementById('group-tun-encap').style.display = isTun ? 'flex' : 'none';
+    document.getElementById('group-ipx-profile').style.display = (isTun && tunEncap === 'ipx') ? 'block' : 'none';
+    document.getElementById('group-ipx-network').style.display = isIpx ? 'flex' : 'none';
+    document.getElementById('group-icmp-opts').style.display = (isIpx && ipxProfile === 'icmp') ? 'flex' : 'none';
+
+    // 3. Security (IPX encryption vs standard Token)
+    document.getElementById('group-token').style.display = isIpx ? 'none' : 'block';
+    document.getElementById('group-ipx-security').style.display = isIpx ? 'block' : 'none';
+
+    if (isIpx) {
+        const encEnabled = (document.getElementById('enable-encryption').value === 'true');
+        document.getElementById('group-alg-container').style.display = encEnabled ? 'block' : 'none';
+        document.getElementById('group-psk-container').style.display = encEnabled ? 'flex' : 'none';
+    }
+
+    // 4. TLS Section (STRICT: Only for AnyTLS / WSS / WSSMUX!)
+    document.getElementById('group-tls-section').style.display = isTls ? 'block' : 'none';
+
+    // 5. TUN & Mux Details in Tab 3
+    document.getElementById('group-tun-details').style.display = isTun ? 'block' : 'none';
+    document.getElementById('group-mux-details').style.display = isMux ? 'block' : 'none';
+
+    // Tab 3 Button Visibility
+    document.getElementById('tab-btn-tun').style.display = (isTun || isMux) ? 'block' : 'none';
+
+    // 6. Ports & Forwarder in Tab 5
+    document.getElementById('group-ports-mapping').style.display = isServer ? 'block' : 'none';
+    document.getElementById('group-forwarder').style.display = (isServer && isTun) ? 'block' : 'none';
+
+    // 7. Buffer profile in Tuning
+    document.getElementById('group-buffer-profile').style.display = (isTun || isIpx) ? 'none' : 'block';
 }
 
 async function handleCreateSubmit(event) {
@@ -156,34 +206,6 @@ async function handleCreateSubmit(event) {
     const transport = document.getElementById('tunnel-transport').value;
     const tun_encapsulation = document.getElementById('tun-encapsulation').value;
     const ipx_profile = document.getElementById('ipx-profile').value;
-    const remote_addr = document.getElementById('remote-addr').value.trim();
-
-    // Security & Encryption
-    const token = document.getElementById('tunnel-token').value.trim();
-    const enable_encryption = document.getElementById('enable-encryption').value === 'true';
-    const algorithm = document.getElementById('algorithm').value;
-    const psk = document.getElementById('psk').value.trim();
-    const kdf_iterations = parseInt(document.getElementById('kdf-iterations').value, 10);
-    const tls_sni = document.getElementById('tls-sni').value.trim();
-
-    // TUN & Mux
-    const tun_name = document.getElementById('tun-name').value.trim();
-    const tun_health_port = parseInt(document.getElementById('tun-health-port').value, 10);
-    const tun_local_addr = document.getElementById('tun-local-addr').value.trim();
-    const tun_remote_addr = document.getElementById('tun-remote-addr').value.trim();
-    const mux_version = parseInt(document.getElementById('mux-version').value, 10);
-    const mux_concurrency = parseInt(document.getElementById('mux-concurrency').value, 10);
-
-    // Tuning
-    const tuning_profile = document.getElementById('tuning-profile').value;
-    const buffer_profile = document.getElementById('buffer-profile').value;
-    const workers = parseInt(document.getElementById('workers').value, 10);
-    const channel_size = parseInt(document.getElementById('channel-size').value, 10);
-    const read_timeout = parseInt(document.getElementById('read-timeout').value, 10);
-
-    // Ports
-    const ports_mapping = document.getElementById('ports-mapping').value.trim();
-    const forwarder = document.getElementById('forwarder').value;
 
     const payload = {
         mode,
@@ -191,26 +213,36 @@ async function handleCreateSubmit(event) {
         transport,
         tun_encapsulation,
         ipx_profile,
-        remote_addr,
-        token,
-        enable_encryption,
-        algorithm,
-        psk,
-        kdf_iterations,
-        tls_sni,
-        tun_name,
-        tun_health_port,
-        tun_local_addr,
-        tun_remote_addr,
-        mux_version,
-        mux_concurrency,
-        tuning_profile,
-        buffer_profile,
-        workers,
-        channel_size,
-        read_timeout,
-        ports_mapping,
-        forwarder
+        ipx_listen_ip: document.getElementById('ipx-listen-ip').value.trim(),
+        ipx_dst_ip: document.getElementById('ipx-dst-ip').value.trim(),
+        ipx_interface: document.getElementById('ipx-interface').value.trim(),
+        ipx_icmp_type: parseInt(document.getElementById('ipx-icmp-type').value, 10),
+        ipx_icmp_code: parseInt(document.getElementById('ipx-icmp-code').value, 10),
+        remote_addr: document.getElementById('remote-addr').value.trim(),
+
+        token: document.getElementById('tunnel-token').value.trim(),
+        enable_encryption: document.getElementById('enable-encryption').value === 'true',
+        algorithm: document.getElementById('algorithm').value,
+        psk: document.getElementById('psk').value.trim(),
+        kdf_iterations: parseInt(document.getElementById('kdf-iterations').value, 10),
+        tls_sni: document.getElementById('tls-sni').value.trim(),
+
+        tun_name: document.getElementById('tun-name').value.trim(),
+        tun_health_port: parseInt(document.getElementById('tun-health-port').value, 10),
+        tun_local_addr: document.getElementById('tun-local-addr').value.trim(),
+        tun_remote_addr: document.getElementById('tun-remote-addr').value.trim(),
+        tun_mtu: parseInt(document.getElementById('tun-mtu').value, 10),
+
+        mux_version: parseInt(document.getElementById('mux-version').value, 10),
+        mux_concurrency: parseInt(document.getElementById('mux-concurrency').value, 10),
+
+        tuning_profile: document.getElementById('tuning-profile').value,
+        buffer_profile: document.getElementById('buffer-profile').value,
+        workers: parseInt(document.getElementById('workers').value, 10),
+        channel_size: parseInt(document.getElementById('channel-size').value, 10),
+
+        ports_mapping: document.getElementById('ports-mapping').value.trim(),
+        forwarder: document.getElementById('forwarder').value
     };
 
     try {

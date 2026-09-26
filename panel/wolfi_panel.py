@@ -178,17 +178,19 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
         self.send_json_response({"status": "success", "tunnels": tunnels})
 
     def handle_create_tunnel(self, body):
-        mode = body.get("mode", "server")
+        mode = body.get("mode", "server") # server or client
         port = str(body.get("port", "8443")).strip()
-        transport = body.get("transport", "tcpmux")
+        transport = body.get("transport", "tcp")
+        is_tun = (transport == "tun")
         tun_encapsulation = body.get("tun_encapsulation", "tcp")
-        is_ipx = (transport == "tun" and tun_encapsulation == "ipx") or body.get("is_ipx") == True
+        is_ipx = (is_tun and tun_encapsulation == "ipx")
 
         filename = f"{'iran' if mode == 'server' else 'kharej'}{port}.toml"
         filepath = os.path.join(CONFIG_DIR, filename)
 
         lines = []
-        # Connection Section
+
+        # 1. Listener / Dialer Section (STRICT: Omitted if is_ipx == True!)
         if mode == "server" and not is_ipx:
             bind_addr = body.get("bind_addr", f":{port}")
             if bind_addr and not bind_addr.startswith(":"):
@@ -196,21 +198,22 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
             lines.append("[listener]")
             lines.append(f'bind_addr = "{bind_addr}"\n')
         elif not is_ipx:
-            remote_addr = body.get("remote_addr", f"127.0.0.1:{port}")
+            remote_addr = body.get("remote_addr", f"1.2.3.4:{port}")
             edge_ip = body.get("edge_ip", "")
             lines.append("[dialer]")
             lines.append(f'remote_addr = "{remote_addr}"')
-            if edge_ip:
+            if edge_ip and transport in ["ws", "wss", "wsmux", "wssmux", "xwsmux"]:
                 lines.append(f'edge_ip = "{edge_ip}"')
             lines.append(f'dial_timeout = {body.get("dial_timeout", 10)}')
             lines.append(f'retry_interval = {body.get("retry_interval", 3)}\n')
 
-        # Transport Section
+        # 2. Transport Section
         lines.append("[transport]")
         lines.append(f'type = "{transport}"')
         if not is_ipx:
             nodelay = "true" if body.get("nodelay", True) else "false"
             lines.append(f'nodelay = {nodelay}')
+            lines.append(f'keepalive_period = {body.get("keepalive_period", 40)}')
 
         if mode == "server":
             if transport == "tcp":
@@ -222,13 +225,10 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
                 lines.append(f'connection_pool = {body.get("connection_pool", 8)}')
 
         lines.append(f'heartbeat_interval = {body.get("heartbeat_interval", 10)}')
-        lines.append(f'heartbeat_timeout = {body.get("heartbeat_timeout", 25)}')
-        if not is_ipx:
-            lines.append(f'keepalive_period = {body.get("keepalive_period", 40)}')
-        lines.append("")
+        lines.append(f'heartbeat_timeout = {body.get("heartbeat_timeout", 25)}\n')
 
-        # TUN Section
-        if transport == "tun":
+        # 3. TUN Section
+        if is_tun:
             lines.append("[tun]")
             lines.append(f'encapsulation = "{tun_encapsulation}"')
             lines.append(f'name = "{body.get("tun_name", "wolfi")}"')
@@ -237,20 +237,21 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
             lines.append(f'health_port = {body.get("tun_health_port", 1234)}')
             lines.append(f'mtu = {body.get("tun_mtu", 1320 if is_ipx else 1500)}\n')
 
-        # IPX Section
+        # 4. IPX Section
         if is_ipx:
+            ipx_prof = body.get("ipx_profile", "tcp")
             lines.append("[ipx]")
             lines.append(f'mode = "{mode}"')
-            lines.append(f'profile = "{body.get("ipx_profile", "tcp")}"')
+            lines.append(f'profile = "{ipx_prof}"')
             lines.append(f'listen_ip = "{body.get("ipx_listen_ip", "0.0.0.0")}"')
             lines.append(f'dst_ip = "{body.get("ipx_dst_ip", "1.2.3.4")}"')
             lines.append(f'interface = "{body.get("ipx_interface", "eth0")}"')
-            if body.get("ipx_profile") == "icmp":
+            if ipx_prof == "icmp":
                 lines.append(f'icmp_type = {body.get("ipx_icmp_type", 0)}')
                 lines.append(f'icmp_code = {body.get("ipx_icmp_code", 0)}')
             lines.append("")
 
-        # Mux Section
+        # 5. Mux Section (STRICT: Only if transport ends with 'mux')
         if transport.endswith("mux"):
             lines.append("[mux]")
             lines.append(f'mux_version = {body.get("mux_version", 2)}')
@@ -259,7 +260,7 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
             lines.append(f'mux_streambuffer = {body.get("mux_streambuffer", 2097152)}')
             lines.append(f'mux_concurrency = {body.get("mux_concurrency", 8)}\n')
 
-        # Security Section
+        # 6. Security Section
         lines.append("[security]")
         if is_ipx:
             enable_enc = "true" if body.get("enable_encryption", True) else "false"
@@ -269,48 +270,45 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
                 lines.append(f'psk = "{body.get("psk", "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=")}"')
                 lines.append(f'kdf_iterations = {body.get("kdf_iterations", 100000)}')
         else:
-            lines.append(f'token = "{body.get("token", "wolfi_secret_token")}"')
+            lines.append(f'token = "{body.get("token", "your_token")}"')
         lines.append("")
 
-        # TLS Section
-        tls_sni = body.get("tls_sni")
-        tls_cert = body.get("tls_cert")
-        tls_key = body.get("tls_key")
-        if transport in ["anytls", "wss", "wssmux"] or tls_sni or tls_cert:
+        # 7. TLS Section (STRICT: Only if transport in anytls, wss, wssmux)
+        if transport in ["anytls", "wss", "wssmux"]:
             lines.append("[tls]")
-            if tls_sni or transport == "anytls":
-                lines.append(f'sni = "{tls_sni or "www.digikala.com"}"')
+            if transport == "anytls" or body.get("tls_sni"):
+                lines.append(f'sni = "{body.get("tls_sni", "www.digikala.com")}"')
             if mode == "server":
-                lines.append(f'tls_cert = "{tls_cert or "/root/wolfi-core/cert_files/cert.crt"}"')
-                lines.append(f'tls_key = "{tls_key or "/root/wolfi-core/cert_files/cert.key"}"')
+                lines.append(f'tls_cert = "{body.get("tls_cert", "/root/wolfi-core/cert_files/cert.crt")}"')
+                lines.append(f'tls_key = "{body.get("tls_key", "/root/wolfi-core/cert_files/cert.key")}"')
             lines.append("")
 
-        # Tuning Section
+        # 8. Tuning Section
         lines.append("[tuning]")
         lines.append(f'auto_tuning = {"true" if body.get("auto_tuning", True) else "false"}')
         lines.append(f'tuning_profile = "{body.get("tuning_profile", "balanced")}"')
         lines.append(f'workers = {body.get("workers", 0)}')
-        lines.append(f'channel_size = {body.get("channel_size", 10000 if transport == "tun" else 4096)}')
-        if not is_ipx:
+        lines.append(f'channel_size = {body.get("channel_size", 10000 if is_tun else 4096)}')
+        if is_ipx:
+            lines.append(f'batch_size = {body.get("batch_size", 2048)}')
+            lines.append(f'so_sndbuf = {body.get("so_sndbuf", 0)}')
+        else:
             lines.append(f'tcp_mss = {body.get("tcp_mss", 0)}')
             lines.append(f'so_rcvbuf = {body.get("so_rcvbuf", 0)}')
             lines.append(f'so_sndbuf = {body.get("so_sndbuf", 0)}')
-            if transport != "tun":
+            if not is_tun:
                 lines.append(f'buffer_profile = "{body.get("buffer_profile", "balanced")}"')
                 lines.append(f'read_timeout = {body.get("read_timeout", 120)}')
-        else:
-            lines.append(f'batch_size = {body.get("batch_size", 2048)}')
-            lines.append(f'so_sndbuf = {body.get("so_sndbuf", 0)}')
         lines.append("")
 
-        # Logging Section
+        # 9. Logging Section
         lines.append("[logging]")
         lines.append(f'log_level = "{body.get("log_level", "info")}"\n')
 
-        # Ports Section
+        # 10. Ports Section
         if mode == "server":
             lines.append("[ports]")
-            if transport == "tun":
+            if is_tun:
                 lines.append(f'forwarder = "{body.get("forwarder", "wolfi")}"')
             lines.append('mapping = [')
             ports_raw = str(body.get("ports_mapping", "443")).split(",")
@@ -366,7 +364,6 @@ WantedBy=multi-user.target
                 with open(filepath, "r") as f:
                     content = f.read()
                     
-                    # Extract remote_addr or bind_addr or health_port
                     r_match = re.search(r'remote_addr\s*=\s*"([^"]+)"', content)
                     b_match = re.search(r'bind_addr\s*=\s*"([^"]+)"', content)
                     h_match = re.search(r'health_port\s*=\s*([0-9]+)', content)
@@ -385,7 +382,6 @@ WantedBy=multi-user.target
             except Exception:
                 pass
 
-        # Perform socket handshake latency test
         start_time = time.time()
         connected = False
         error_msg = ""
