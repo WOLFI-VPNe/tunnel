@@ -427,7 +427,7 @@ local mode="$2"
 [[ "$is_ipx" != "true" ]] && return
 colorize blue "━━━ IPX Configuration ━━━" bold
 CONFIG[ipx_mode]="$mode"
-AVAILABLE_PROFILES=("icmp" "ipip" "udp" "tcp" "gre" "bip" "fou" "icmp_fou")
+AVAILABLE_PROFILES=("wolfi" "icmp" "gre" "ipip" "udp" "tcp" "bip" "fou" "icmp_fou")
 colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
@@ -503,9 +503,7 @@ fi
 if [[ "$is_ipx" == "true" ]]; then
 echo "[ipx]"
 echo "mode = \"${CONFIG[ipx_mode]}\""
-local real_profile="${CONFIG[ipx_profile]}"
-[[ "$real_profile" == "icmp_fou" || "$real_profile" == "icmp-fou" ]] && real_profile="icmp"
-echo "profile = \"$real_profile\""
+echo "profile = \"${CONFIG[ipx_profile]}\";"
 echo "listen_ip = \"${CONFIG[ipx_listen_ip]}\""
 echo "dst_ip = \"${CONFIG[ipx_dst_ip]}\""
 echo "interface = \"${CONFIG[ipx_interface]}\""
