@@ -10,10 +10,6 @@ echo "This script must be run as root"
 sleep 1
 exit 1
 fi
-if [[ "$1" == "update" ]]; then
-update_script
-exit 0
-fi
 colorize() {
 local color="$1"
 local text="$2"
@@ -140,8 +136,19 @@ fi
 chmod u+x "${config_dir}/wolfi_premium"
 colorize green "WOLFI installation completed."
 }
+install_wolfi_cli() {
+    if [[ -f "$0" && "$0" != "/dev/fd/"* && "$0" != "/proc/"* ]]; then
+        cp "$0" /usr/bin/wolfi 2>/dev/null || true
+        cp "$0" /usr/local/bin/wolfi 2>/dev/null || true
+    else
+        curl -sSL "https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.sh" -o /usr/bin/wolfi 2>/dev/null || true
+        cp /usr/bin/wolfi /usr/local/bin/wolfi 2>/dev/null || true
+    fi
+    chmod +x /usr/bin/wolfi /usr/local/bin/wolfi 2>/dev/null || true
+}
 install_jq
 download_and_extract_wolfi
+install_wolfi_cli
 declare -A CONFIG
 reset_config() {
 CONFIG=()
@@ -1022,6 +1029,10 @@ case $choice in
 *) colorize red "Invalid option!" && sleep 1 ;;
 esac
 }
+if [[ "$1" == "update" ]]; then
+    update_script
+    exit 0
+fi
 while true; do
 display_menu
 read_option
