@@ -451,6 +451,7 @@ colorize red "Destination IP cannot be empty."
 done
 interface=$(ip route show default | awk '{print $5}')
 prompt_with_default "Network Interface" $interface "CONFIG[ipx_interface]"
+CONFIG[ipx_profile]="${CONFIG[ipx_profile]//-/_}"
 if [[ "${CONFIG[ipx_profile]}" == "icmp" || "${CONFIG[ipx_profile]}" == "icmp_fou" ]]; then
 prompt_with_default "ICMP Type" "0" "CONFIG[ipx_icmp_type]"
 prompt_with_default "ICMP Code" "0" "CONFIG[ipx_icmp_code]"

@@ -239,7 +239,7 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         # 4. IPX Section
         if is_ipx:
-            ipx_prof = body.get("ipx_profile", "tcp")
+            ipx_prof = body.get("ipx_profile", "tcp").replace("-", "_")
             lines.append("[ipx]")
             lines.append(f'mode = "{mode}"')
             lines.append(f'profile = "{ipx_prof}"')
