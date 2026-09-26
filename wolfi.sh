@@ -87,6 +87,15 @@ return 1
 fi
 return 0
 }
+
+fix_existing_configs() {
+    if [[ -d "$config_dir" ]]; then
+        sed -i 's/profile = "wolfi"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
+        sed -i 's/profile = "icmp-fou"/profile = "icmp"/g' "$config_dir"/*.toml 2>/dev/null || true
+        sed -i 's/profile = "ipip"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
+    fi
+}
+
 install_jq() {
 if ! command -v jq &> /dev/null; then
 if command -v apt-get &> /dev/null; then
@@ -99,6 +108,7 @@ exit 1
 fi
 fi
 }
+fix_existing_configs
 download_and_extract_wolfi() {
 if [[ "$1" == "menu" ]]; then
 rm -rf "${config_dir}/wolfi_premium" >/dev/null 2>&1
@@ -146,7 +156,17 @@ install_wolfi_cli() {
     fi
     chmod +x /usr/bin/wolfi /usr/local/bin/wolfi 2>/dev/null || true
 }
+
+fix_existing_configs() {
+    if [[ -d "$config_dir" ]]; then
+        sed -i 's/profile = "wolfi"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
+        sed -i 's/profile = "icmp-fou"/profile = "icmp"/g' "$config_dir"/*.toml 2>/dev/null || true
+        sed -i 's/profile = "ipip"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
+    fi
+}
+
 install_jq
+fix_existing_configs
 download_and_extract_wolfi
 install_wolfi_cli
 declare -A CONFIG
@@ -1026,7 +1046,8 @@ case $choice in
 1) configure_tunnel ;;
 2) tunnel_management ;;
 3) check_tunnel_status ;;
-4) download_and_extract_wolfi "menu" ;;
+4) fix_existing_configs
+download_and_extract_wolfi "menu" ;;
 5) update_script ;;
 6) remove_core ;;
     7) setup_web_panel ;;
