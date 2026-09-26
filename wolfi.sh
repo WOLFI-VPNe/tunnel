@@ -447,7 +447,7 @@ local mode="$2"
 [[ "$is_ipx" != "true" ]] && return
 colorize blue "━━━ IPX Configuration ━━━" bold
 CONFIG[ipx_mode]="$mode"
-AVAILABLE_PROFILES=("wolfi" "icmp" "gre" "ipip" "udp" "tcp" "bip" "fou" "icmp_fou")
+AVAILABLE_PROFILES=("gre-fou" "wolfi" "icmp" "gre" "ipip" "udp" "tcp" "bip" "fou" "icmp_fou")
 colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
