@@ -107,14 +107,10 @@ sleep 2
 fi
 [[ -f "${config_dir}/wolfi_premium" ]] && return 1
 ARCH=$(uname -m)
+PRIMARY_URL="https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.tar.gz"
+FALLBACK_URL="https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.tar.gz"
 case "$ARCH" in
-x86_64)
-PRIMARY_URL="http://script.wolfi.top:2095/wolfi_premium_amd64.tar.gz"
-FALLBACK_URL="http://79.175.167.114:2095/wolfi_premium_amd64.tar.gz"
-;;
-arm64|aarch64)
-PRIMARY_URL="http://script.wolfi.top:2095/wolfi_premium_arm64.tar.gz"
-FALLBACK_URL="http://79.175.167.114:2095/wolfi_premium_arm64.tar.gz"
+x86_64|arm64|aarch64)
 ;;
 *)
 colorize red "Unsupported architecture: $ARCH."
