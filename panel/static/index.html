@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOLFI - Web Management Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">🐺</div>
+                <div class="brand-text">
+                    <h2>WOLFI</h2>
+                    <span class="badge-tag">PREMIUM CORE</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" onclick="switchTab('overview')">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Overview
+                </a>
+                <a href="#" class="nav-item" onclick="openCreateModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    New Tunnel
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('logs')">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    System Logs
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot online"></span>
+                    <span>Panel Active (Port 4000)</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>Tunnel Management Dashboard</h1>
+                    <p>Monitor status, configure reverse tunnels, and manage WOLFI services.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Create Tunnel
+                    </button>
+                    <button class="btn btn-secondary" onclick="fetchTunnels()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Quick Metrics Grid -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon cyan">🌐</div>
+                    <div class="stat-details">
+                        <span class="stat-label">Server IP</span>
+                        <h3 id="stat-ip">Loading...</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon emerald">⚡</div>
+                    <div class="stat-details">
+                        <span class="stat-label">Active Tunnels</span>
+                        <h3 id="stat-count">0 Tunnels</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon violet">🛡️</div>
+                    <div class="stat-details">
+                        <span class="stat-label">WOLFI Core</span>
+                        <h3 id="stat-version">v1.0.0 Premium</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon rose">🔌</div>
+                    <div class="stat-details">
+                        <span class="stat-label">Web Panel</span>
+                        <h3>Port 4000</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tunnels Section -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2>Active Tunnel Services</h2>
+                    <span class="subtitle">Live systemd services & TOML configurations</span>
+                </div>
+
+                <div id="tunnels-list" class="tunnels-grid">
+                    <!-- Dynamic Tunnel Cards render here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Create Tunnel Modal -->
+    <div id="create-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Create New WOLFI Tunnel</h3>
+                <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <form id="create-form" onsubmit="handleCreateSubmit(event)">
+                <div class="form-group">
+                    <label>Tunnel Mode</label>
+                    <div class="segmented-control">
+                        <input type="radio" id="mode-server" name="mode" value="server" checked onchange="toggleModeFields()">
+                        <label for="mode-server">IRAN (Server / Listener)</label>
+                        
+                        <input type="radio" id="mode-client" name="mode" value="client" onchange="toggleModeFields()">
+                        <label for="mode-client">KHAREJ (Client / Dialer)</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bind / Listen Port</label>
+                        <input type="text" id="tunnel-port" value="8443" placeholder="e.g. 8443" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Transport Protocol</label>
+                        <select id="tunnel-transport">
+                            <option value="tcp">TCP</option>
+                            <option value="tcpmux" selected>TCP Mux</option>
+                            <option value="ws">WebSocket (WS)</option>
+                            <option value="wss">WebSocket Secure (WSS)</option>
+                            <option value="wsmux">WS Mux</option>
+                            <option value="wssmux">WSS Mux</option>
+                            <option value="anytls">AnyTLS</option>
+                            <option value="tun">TUN Interface</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="group-remote" style="display: none;">
+                    <label>IRAN Server Address (IP:Port or Domain:Port)</label>
+                    <input type="text" id="remote-addr" placeholder="e.g. 1.2.3.4:8443">
+                </div>
+
+                <div class="form-group">
+                    <label>Security Token / Key</label>
+                    <input type="text" id="tunnel-token" value="wolfi_secret_token" required>
+                </div>
+
+                <div class="form-group" id="group-ports">
+                    <label>Forwarded Ports (comma-separated, e.g., 443, 80=8080, 443-600)</label>
+                    <input type="text" id="ports-mapping" value="443" placeholder="e.g. 443, 80=8080">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create & Start Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div id="logs-modal" class="modal-overlay hidden">
+        <div class="modal-card wide">
+            <div class="modal-header">
+                <h3 id="logs-title">Tunnel Service Logs</h3>
+                <button class="close-btn" onclick="closeLogsModal()">&times;</button>
+            </div>
+            <div class="terminal-view">
+                <pre id="logs-output">Loading logs...</pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLogsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
