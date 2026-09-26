@@ -89,6 +89,7 @@ return 0
 }
 
 fix_existing_configs() {
+    sed -i 's/profile = "gre-fou"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
     if [[ -d "$config_dir" ]]; then
         sed -i 's/profile = "wolfi"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
         sed -i 's/profile = "icmp-fou"/profile = "icmp"/g' "$config_dir"/*.toml 2>/dev/null || true
@@ -158,6 +159,7 @@ install_wolfi_cli() {
 }
 
 fix_existing_configs() {
+    sed -i 's/profile = "gre-fou"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
     if [[ -d "$config_dir" ]]; then
         sed -i 's/profile = "wolfi"/profile = "gre"/g' "$config_dir"/*.toml 2>/dev/null || true
         sed -i 's/profile = "icmp-fou"/profile = "icmp"/g' "$config_dir"/*.toml 2>/dev/null || true
