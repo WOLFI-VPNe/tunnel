@@ -177,7 +177,7 @@ echo ""
 VALID_ALGORITHMS=("aes-256-gcm" "chacha20-poly1305" "aes-128-gcm")
 is_valid_algorithm() {
 local input="$1"
-for alg in "${VALID_ALGORITHMS[@"]"; do
+for alg in "${VALID_ALGORITHMS[@]}"; do
 if [[ "$input" == "$alg" ]]; then
 return 0
 fi
@@ -421,7 +421,7 @@ colorize magenta "Available profiles: ${AVAILABLE_PROFILES[*]}"
 while true; do
 prompt_with_default "Profile" "tcp" "CONFIG[ipx_profile]"
 CONFIG[ipx_profile]="${"CONFIG[ipx_profile]",,}"
-for profile in "${AVAILABLE_PROFILES[@"]"; do
+for profile in "${AVAILABLE_PROFILES[@]}"; do
 if [[ "${CONFIG[ipx_profile]}" == "$profile" ]]; then
 break 2
 fi
@@ -555,7 +555,7 @@ echo "[ports]"
 [[ -n "${CONFIG[forwarder]}" ]]  && echo "forwarder = \"${CONFIG[forwarder]}\""
 echo "mapping = ["
 IFS=',' read -r -a ports <<< "${CONFIG[ports_mapping]}"
-for port in "${ports[@"]"; do
+for port in "${ports[@]}"; do
 [[ -n "$port" ]] && echo "    \"${port// /}\","
 done
 echo "]"
@@ -662,10 +662,6 @@ echo -e "Script Version: [33m${SCRIPT_VERSION}[32m"
 [[ -f "${config_dir}/wolfi_premium" ]] && \
 echo -e "Core Version: [33m$($config_dir/wolfi_premium -v)[32m"
 echo -e "Telegram Channel: [33m@Gozar_XRay[0m"
-}\033[32m"
-[[ -f "${config_dir}/wolfi_premium" ]] && \
-echo -e "Core Version: \033[33m$($config_dir/wolfi_premium -v)\033[32m"
-echo -e "Telegram Channel: \033[33m@Gozar_XRay\033[0m"
 }
 display_server_info() {
 echo -e "\e[93m═══════════════════════════════════════════\e[0m"
@@ -698,7 +694,7 @@ done
 [[ ${#missing_services[@]} -eq 0 ]] && return 0
 echo
 colorize red "Missing service files:" bold
-for entry in "${missing_services[@"]"; do
+for entry in "${missing_services[@]}"; do
 service_file="${entry%%:*}"
 location="${entry#*:}"; location="${location%%:*}"
 tunnel_port="${entry##*:}"
@@ -707,7 +703,7 @@ done
 echo
 read -r -p "Do you want to create missing service files? (y/n): " confirm
 if [[ "$confirm" =~ ^[Yy]$ ]]; then
-for entry in "${missing_services[@"]"; do
+for entry in "${missing_services[@]}"; do
 service_file="${entry%%:*}"
 location="${entry#*:}"; location="${location%%:*}"
 tunnel_port="${entry##*:}"
