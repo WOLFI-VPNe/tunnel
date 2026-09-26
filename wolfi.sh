@@ -503,7 +503,9 @@ fi
 if [[ "$is_ipx" == "true" ]]; then
 echo "[ipx]"
 echo "mode = \"${CONFIG[ipx_mode]}\""
-echo "profile = \"${CONFIG[ipx_profile]}\""
+local real_profile="${CONFIG[ipx_profile]}"
+[[ "$real_profile" == "icmp_fou" || "$real_profile" == "icmp-fou" ]] && real_profile="icmp"
+echo "profile = \"$real_profile\""
 echo "listen_ip = \"${CONFIG[ipx_listen_ip]}\""
 echo "dst_ip = \"${CONFIG[ipx_dst_ip]}\""
 echo "interface = \"${CONFIG[ipx_interface]}\""
