@@ -10,6 +10,10 @@ echo "This script must be run as root"
 sleep 1
 exit 1
 fi
+if [[ "$1" == "update" ]]; then
+update_script
+exit 0
+fi
 colorize() {
 local color="$1"
 local text="$2"
@@ -878,18 +882,50 @@ fi
 press_key
 }
 update_script() {
-return
-DEST_DIR="/usr/bin/"
-WOLFI_SCRIPT="wolfi"
+clear
+colorize cyan "━━━ Updating WOLFI Core, Web Panel & Script ━━━" bold
+echo
+DOWNLOAD_DIR=$(mktemp -d)
+PRIMARY_URL="https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.tar.gz"
 SCRIPT_URL="https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.sh"
-[ -f "$DEST_DIR/$WOLFI_SCRIPT" ] && rm "$DEST_DIR/$WOLFI_SCRIPT"
-if curl -s -L -o "$DEST_DIR/$WOLFI_SCRIPT" "$SCRIPT_URL"; then
-chmod +x "$DEST_DIR/$WOLFI_SCRIPT"
-colorize yellow "Type 'wolfi' to run the script." bold
-exit 0
+
+colorize yellow "Downloading latest WOLFI Core & Web Panel..."
+if curl -sSL --max-time 15 -o "$DOWNLOAD_DIR/wolfi.tar.gz" "$PRIMARY_URL"; then
+    tar -xzf "$DOWNLOAD_DIR/wolfi.tar.gz" -C "$config_dir"
+    chmod +x "${config_dir}/wolfi_premium" 2>/dev/null || true
+    colorize green "✔ WOLFI Core & Web Panel updated successfully." bold
 else
-colorize red "Download failed."
+    colorize red "✖ Failed to download WOLFI core update."
 fi
+
+colorize yellow "Updating WOLFI script..."
+if curl -sSL --max-time 15 -o "$DOWNLOAD_DIR/wolfi.sh" "$SCRIPT_URL"; then
+    chmod +x "$DOWNLOAD_DIR/wolfi.sh"
+    cp "$DOWNLOAD_DIR/wolfi.sh" /usr/bin/wolfi 2>/dev/null || true
+    cp "$DOWNLOAD_DIR/wolfi.sh" ./wolfi.sh 2>/dev/null || true
+    colorize green "✔ WOLFI script updated successfully." bold
+else
+    colorize red "✖ Failed to download WOLFI script update."
+fi
+rm -rf "$DOWNLOAD_DIR"
+
+if systemctl is-active wolfi-panel.service &>/dev/null; then
+    systemctl restart wolfi-panel.service
+    colorize green "✔ WOLFI Web Panel service restarted." bold
+fi
+
+local services
+services=$(systemctl list-units --type=service --state=running "wolfi-*.service" --no-legend 2>/dev/null | awk '{print $1}')
+if [[ -n "$services" ]]; then
+    for s in $services; do
+        systemctl restart "$s"
+    done
+    colorize green "✔ Active WOLFI tunnel services restarted." bold
+fi
+
+echo
+colorize green "★ WOLFI Update Complete! All existing configurations were preserved." bold
+echo
 press_key
 }
 configure_tunnel() {

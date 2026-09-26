@@ -1,0 +1,25 @@
+[listener]
+bind_addr = ":8443"
+
+[transport]
+type = "tcpmux"
+nodelay = true
+heartbeat_interval = 10
+heartbeat_timeout = 25
+
+[security]
+token = "wolfi_secret_key"
+
+[tuning]
+auto_tuning = true
+tuning_profile = "balanced"
+workers = 0
+
+[logging]
+log_level = "info"
+
+[ports]
+mapping = [
+    "443",
+    "80=8080",
+]
