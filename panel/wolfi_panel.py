@@ -8,6 +8,8 @@ import subprocess
 import urllib.parse
 import re
 import base64
+import time
+import socket
 
 PORT = 4000
 PANEL_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +34,7 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
 
     def check_auth(self):
         if not os.path.exists(AUTH_FILE):
-            return True # Auth disabled if file does not exist yet
+            return True
 
         try:
             with open(AUTH_FILE, "r") as f:
@@ -104,22 +106,12 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_create_tunnel(body)
         elif path == "/api/tunnels/action":
             self.handle_tunnel_action(body)
+        elif path == "/api/tunnels/test_connection":
+            self.handle_test_connection(body)
         elif path == "/api/auth/change_password":
             self.handle_change_password(body)
         else:
             self.send_error(404, "API Endpoint Not Found")
-
-    def handle_change_password(self, body):
-        new_pass = body.get("password")
-        if not new_pass:
-            self.send_json_response({"status": "error", "message": "Password cannot be empty"}, code=400)
-            return
-
-        auth_data = {"username": "admin", "password": new_pass}
-        with open(AUTH_FILE, "w") as f:
-            json.dump(auth_data, f)
-
-        self.send_json_response({"status": "success", "message": "Password updated successfully"})
 
     def handle_get_status(self):
         ip_addr = "127.0.0.1"
@@ -187,46 +179,142 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_create_tunnel(self, body):
         mode = body.get("mode", "server")
-        transport = body.get("transport", "tcp")
-        port = body.get("port", "8443")
-        token = body.get("token", "your_token")
-        remote_addr = body.get("remote_addr", "")
-        forward_ports = body.get("ports_mapping", "443")
+        port = str(body.get("port", "8443")).strip()
+        transport = body.get("transport", "tcpmux")
+        tun_encapsulation = body.get("tun_encapsulation", "tcp")
+        is_ipx = (transport == "tun" and tun_encapsulation == "ipx") or body.get("is_ipx") == True
 
         filename = f"{'iran' if mode == 'server' else 'kharej'}{port}.toml"
         filepath = os.path.join(CONFIG_DIR, filename)
 
         lines = []
-        if mode == "server":
+        # Connection Section
+        if mode == "server" and not is_ipx:
+            bind_addr = body.get("bind_addr", f":{port}")
+            if bind_addr and not bind_addr.startswith(":"):
+                bind_addr = f":{bind_addr}"
             lines.append("[listener]")
-            lines.append(f'bind_addr = ":{port}"\n')
-        else:
+            lines.append(f'bind_addr = "{bind_addr}"\n')
+        elif not is_ipx:
+            remote_addr = body.get("remote_addr", f"127.0.0.1:{port}")
+            edge_ip = body.get("edge_ip", "")
             lines.append("[dialer]")
             lines.append(f'remote_addr = "{remote_addr}"')
-            lines.append('dial_timeout = 10')
-            lines.append('retry_interval = 3\n')
+            if edge_ip:
+                lines.append(f'edge_ip = "{edge_ip}"')
+            lines.append(f'dial_timeout = {body.get("dial_timeout", 10)}')
+            lines.append(f'retry_interval = {body.get("retry_interval", 3)}\n')
 
+        # Transport Section
         lines.append("[transport]")
         lines.append(f'type = "{transport}"')
-        lines.append('nodelay = true')
-        lines.append('heartbeat_interval = 10')
-        lines.append('heartbeat_timeout = 25\n')
-
-        lines.append("[security]")
-        lines.append(f'token = "{token}"\n')
-
-        lines.append("[tuning]")
-        lines.append('auto_tuning = true')
-        lines.append('tuning_profile = "balanced"')
-        lines.append('workers = 0\n')
-
-        lines.append("[logging]")
-        lines.append('log_level = "info"\n')
+        if not is_ipx:
+            nodelay = "true" if body.get("nodelay", True) else "false"
+            lines.append(f'nodelay = {nodelay}')
 
         if mode == "server":
+            if transport == "tcp":
+                lines.append(f'accept_udp = {"true" if body.get("accept_udp") else "false"}')
+            if transport not in ["tun", "ws"] and not is_ipx:
+                lines.append(f'proxy_protocol = {"true" if body.get("proxy_protocol") else "false"}')
+        else:
+            if transport != "tun":
+                lines.append(f'connection_pool = {body.get("connection_pool", 8)}')
+
+        lines.append(f'heartbeat_interval = {body.get("heartbeat_interval", 10)}')
+        lines.append(f'heartbeat_timeout = {body.get("heartbeat_timeout", 25)}')
+        if not is_ipx:
+            lines.append(f'keepalive_period = {body.get("keepalive_period", 40)}')
+        lines.append("")
+
+        # TUN Section
+        if transport == "tun":
+            lines.append("[tun]")
+            lines.append(f'encapsulation = "{tun_encapsulation}"')
+            lines.append(f'name = "{body.get("tun_name", "wolfi")}"')
+            lines.append(f'local_addr = "{body.get("tun_local_addr", "10.10.10.1/24" if mode == "server" else "10.10.10.2/24")}"')
+            lines.append(f'remote_addr = "{body.get("tun_remote_addr", "10.10.10.2/24" if mode == "server" else "10.10.10.1/24")}"')
+            lines.append(f'health_port = {body.get("tun_health_port", 1234)}')
+            lines.append(f'mtu = {body.get("tun_mtu", 1320 if is_ipx else 1500)}\n')
+
+        # IPX Section
+        if is_ipx:
+            lines.append("[ipx]")
+            lines.append(f'mode = "{mode}"')
+            lines.append(f'profile = "{body.get("ipx_profile", "tcp")}"')
+            lines.append(f'listen_ip = "{body.get("ipx_listen_ip", "0.0.0.0")}"')
+            lines.append(f'dst_ip = "{body.get("ipx_dst_ip", "1.2.3.4")}"')
+            lines.append(f'interface = "{body.get("ipx_interface", "eth0")}"')
+            if body.get("ipx_profile") == "icmp":
+                lines.append(f'icmp_type = {body.get("ipx_icmp_type", 0)}')
+                lines.append(f'icmp_code = {body.get("ipx_icmp_code", 0)}')
+            lines.append("")
+
+        # Mux Section
+        if transport.endswith("mux"):
+            lines.append("[mux]")
+            lines.append(f'mux_version = {body.get("mux_version", 2)}')
+            lines.append(f'mux_framesize = {body.get("mux_framesize", 32768)}')
+            lines.append(f'mux_recievebuffer = {body.get("mux_recievebuffer", 4194304)}')
+            lines.append(f'mux_streambuffer = {body.get("mux_streambuffer", 2097152)}')
+            lines.append(f'mux_concurrency = {body.get("mux_concurrency", 8)}\n')
+
+        # Security Section
+        lines.append("[security]")
+        if is_ipx:
+            enable_enc = "true" if body.get("enable_encryption", True) else "false"
+            lines.append(f'enable_encryption = {enable_enc}')
+            if enable_enc == "true":
+                lines.append(f'algorithm = "{body.get("algorithm", "aes-256-gcm")}"')
+                lines.append(f'psk = "{body.get("psk", "pN9m6m0tH3nE3V8xKZ6Lq5yYcW2K1S7QG9u4cF0A8M4=")}"')
+                lines.append(f'kdf_iterations = {body.get("kdf_iterations", 100000)}')
+        else:
+            lines.append(f'token = "{body.get("token", "wolfi_secret_token")}"')
+        lines.append("")
+
+        # TLS Section
+        tls_sni = body.get("tls_sni")
+        tls_cert = body.get("tls_cert")
+        tls_key = body.get("tls_key")
+        if transport in ["anytls", "wss", "wssmux"] or tls_sni or tls_cert:
+            lines.append("[tls]")
+            if tls_sni or transport == "anytls":
+                lines.append(f'sni = "{tls_sni or "www.digikala.com"}"')
+            if mode == "server":
+                lines.append(f'tls_cert = "{tls_cert or "/root/wolfi-core/cert_files/cert.crt"}"')
+                lines.append(f'tls_key = "{tls_key or "/root/wolfi-core/cert_files/cert.key"}"')
+            lines.append("")
+
+        # Tuning Section
+        lines.append("[tuning]")
+        lines.append(f'auto_tuning = {"true" if body.get("auto_tuning", True) else "false"}')
+        lines.append(f'tuning_profile = "{body.get("tuning_profile", "balanced")}"')
+        lines.append(f'workers = {body.get("workers", 0)}')
+        lines.append(f'channel_size = {body.get("channel_size", 10000 if transport == "tun" else 4096)}')
+        if not is_ipx:
+            lines.append(f'tcp_mss = {body.get("tcp_mss", 0)}')
+            lines.append(f'so_rcvbuf = {body.get("so_rcvbuf", 0)}')
+            lines.append(f'so_sndbuf = {body.get("so_sndbuf", 0)}')
+            if transport != "tun":
+                lines.append(f'buffer_profile = "{body.get("buffer_profile", "balanced")}"')
+                lines.append(f'read_timeout = {body.get("read_timeout", 120)}')
+        else:
+            lines.append(f'batch_size = {body.get("batch_size", 2048)}')
+            lines.append(f'so_sndbuf = {body.get("so_sndbuf", 0)}')
+        lines.append("")
+
+        # Logging Section
+        lines.append("[logging]")
+        lines.append(f'log_level = "{body.get("log_level", "info")}"\n')
+
+        # Ports Section
+        if mode == "server":
             lines.append("[ports]")
+            if transport == "tun":
+                lines.append(f'forwarder = "{body.get("forwarder", "wolfi")}"')
             lines.append('mapping = [')
-            for p in forward_ports.split(","):
+            ports_raw = str(body.get("ports_mapping", "443")).split(",")
+            for p in ports_raw:
                 p_clean = p.strip()
                 if p_clean:
                     lines.append(f'    "{p_clean}",')
@@ -260,6 +348,64 @@ WantedBy=multi-user.target
             subprocess.run(["systemctl", "enable", "--now", f"{service_name}.service"])
 
         self.send_json_response({"status": "success", "message": f"Tunnel {service_name} created successfully!"})
+
+    def handle_test_connection(self, body):
+        tunnel_id = body.get("id")
+        if not tunnel_id:
+            self.send_json_response({"status": "error", "message": "Tunnel ID required"}, code=400)
+            return
+
+        filename = f"{tunnel_id}.toml"
+        filepath = os.path.join(CONFIG_DIR, filename)
+
+        host = "127.0.0.1"
+        port = 8443
+
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, "r") as f:
+                    content = f.read()
+                    
+                    # Extract remote_addr or bind_addr or health_port
+                    r_match = re.search(r'remote_addr\s*=\s*"([^"]+)"', content)
+                    b_match = re.search(r'bind_addr\s*=\s*"([^"]+)"', content)
+                    h_match = re.search(r'health_port\s*=\s*([0-9]+)', content)
+
+                    if r_match:
+                        target = r_match.group(1)
+                        if ":" in target:
+                            host, p_str = target.split(":", 1)
+                            port = int(p_str)
+                    elif b_match:
+                        target = b_match.group(1)
+                        if ":" in target:
+                            port = int(target.split(":")[-1])
+                    elif h_match:
+                        port = int(h_match.group(1))
+            except Exception:
+                pass
+
+        # Perform socket handshake latency test
+        start_time = time.time()
+        connected = False
+        error_msg = ""
+        try:
+            s = socket.create_connection((host, port), timeout=2.0)
+            s.close()
+            connected = True
+        except Exception as e:
+            error_msg = str(e)
+
+        latency_ms = int((time.time() - start_time) * 1000)
+
+        self.send_json_response({
+            "status": "success",
+            "connected": connected,
+            "latency_ms": latency_ms if connected else None,
+            "target_host": host,
+            "target_port": port,
+            "error": error_msg if not connected else None
+        })
 
     def handle_tunnel_action(self, body):
         tunnel_id = body.get("id")

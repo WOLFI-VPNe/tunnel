@@ -61,6 +61,7 @@ function renderTunnels(tunnels) {
                     ${t.status.toUpperCase()}
                 </span>
             </div>
+
             <div class="card-body">
                 <h4>Port :${t.port}</h4>
                 <div class="card-info">
@@ -68,7 +69,16 @@ function renderTunnels(tunnels) {
                     <span class="info-pill">${t.service_name}</span>
                 </div>
             </div>
+
+            <div class="latency-container">
+                <span style="font-size: 12px; color: #94a3b8;">Connection Status:</span>
+                <span id="latency-${t.id}" class="latency-badge">
+                    Click 'Ping Test'
+                </span>
+            </div>
+
             <div class="card-actions">
+                <button class="btn btn-primary btn-xs" onclick="testConnection('${t.id}')">⚡ Ping Test</button>
                 <button class="btn btn-secondary btn-xs" onclick="tunnelAction('${t.id}', 'restart')">Restart</button>
                 <button class="btn btn-secondary btn-xs" onclick="viewLogs('${t.service_name}')">Logs</button>
                 <button class="btn btn-danger btn-xs" onclick="tunnelAction('${t.id}', 'delete')">Delete</button>
@@ -78,18 +88,64 @@ function renderTunnels(tunnels) {
     });
 }
 
+async function testConnection(tunnelId) {
+    const badge = document.getElementById(`latency-${tunnelId}`);
+    if (badge) {
+        badge.textContent = 'Testing...';
+        badge.className = 'latency-badge';
+    }
+
+    try {
+        const res = await fetch('/api/tunnels/test_connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: tunnelId })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.connected) {
+            badge.textContent = `Connected (${data.latency_ms} ms)`;
+            badge.className = 'latency-badge connected';
+        } else {
+            badge.textContent = `Disconnected`;
+            badge.className = 'latency-badge disconnected';
+        }
+    } catch (err) {
+        if (badge) {
+            badge.textContent = 'Error';
+            badge.className = 'latency-badge disconnected';
+        }
+    }
+}
+
 function openCreateModal() {
     document.getElementById('create-modal').classList.remove('hidden');
+    switchWizardTab('tab-basic');
 }
 
 function closeCreateModal() {
     document.getElementById('create-modal').classList.add('hidden');
 }
 
-function toggleModeFields() {
+function switchWizardTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const activePane = document.getElementById(tabId);
+    if (activePane) activePane.classList.add('active');
+}
+
+function toggleWizardFields() {
     const isClient = document.getElementById('mode-client').checked;
+    const transport = document.getElementById('tunnel-transport').value;
+    const tunEncapsulation = document.getElementById('tun-encapsulation').value;
+
     document.getElementById('group-remote').style.display = isClient ? 'block' : 'none';
-    document.getElementById('group-ports').style.display = isClient ? 'none' : 'block';
+    document.getElementById('group-tun-basic').style.display = (transport === 'tun') ? 'flex' : 'none';
+    document.getElementById('group-ipx-profile').style.display = (transport === 'tun' && tunEncapsulation === 'ipx') ? 'block' : 'none';
 }
 
 async function handleCreateSubmit(event) {
@@ -98,17 +154,63 @@ async function handleCreateSubmit(event) {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     const port = document.getElementById('tunnel-port').value.trim();
     const transport = document.getElementById('tunnel-transport').value;
+    const tun_encapsulation = document.getElementById('tun-encapsulation').value;
+    const ipx_profile = document.getElementById('ipx-profile').value;
     const remote_addr = document.getElementById('remote-addr').value.trim();
+
+    // Security & Encryption
     const token = document.getElementById('tunnel-token').value.trim();
+    const enable_encryption = document.getElementById('enable-encryption').value === 'true';
+    const algorithm = document.getElementById('algorithm').value;
+    const psk = document.getElementById('psk').value.trim();
+    const kdf_iterations = parseInt(document.getElementById('kdf-iterations').value, 10);
+    const tls_sni = document.getElementById('tls-sni').value.trim();
+
+    // TUN & Mux
+    const tun_name = document.getElementById('tun-name').value.trim();
+    const tun_health_port = parseInt(document.getElementById('tun-health-port').value, 10);
+    const tun_local_addr = document.getElementById('tun-local-addr').value.trim();
+    const tun_remote_addr = document.getElementById('tun-remote-addr').value.trim();
+    const mux_version = parseInt(document.getElementById('mux-version').value, 10);
+    const mux_concurrency = parseInt(document.getElementById('mux-concurrency').value, 10);
+
+    // Tuning
+    const tuning_profile = document.getElementById('tuning-profile').value;
+    const buffer_profile = document.getElementById('buffer-profile').value;
+    const workers = parseInt(document.getElementById('workers').value, 10);
+    const channel_size = parseInt(document.getElementById('channel-size').value, 10);
+    const read_timeout = parseInt(document.getElementById('read-timeout').value, 10);
+
+    // Ports
     const ports_mapping = document.getElementById('ports-mapping').value.trim();
+    const forwarder = document.getElementById('forwarder').value;
 
     const payload = {
         mode,
         port,
         transport,
+        tun_encapsulation,
+        ipx_profile,
         remote_addr,
         token,
-        ports_mapping
+        enable_encryption,
+        algorithm,
+        psk,
+        kdf_iterations,
+        tls_sni,
+        tun_name,
+        tun_health_port,
+        tun_local_addr,
+        tun_remote_addr,
+        mux_version,
+        mux_concurrency,
+        tuning_profile,
+        buffer_profile,
+        workers,
+        channel_size,
+        read_timeout,
+        ports_mapping,
+        forwarder
     };
 
     try {
@@ -175,7 +277,7 @@ function closeLogsModal() {
     document.getElementById('logs-modal').classList.add('hidden');
 }
 
-function switchTab(tab) {
+function switchMainTab(tab) {
     if (tab === 'overview') {
         fetchTunnels();
     } else if (tab === 'logs') {
