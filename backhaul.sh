@@ -881,7 +881,7 @@ update_script() {
 return
 DEST_DIR="/usr/bin/"
 WOLFI_SCRIPT="wolfi"
-SCRIPT_URL="http://79.175.167.114/wolfi.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/WOLFI-VPNe/tunnel/main/wolfi.sh"
 [ -f "$DEST_DIR/$WOLFI_SCRIPT" ] && rm "$DEST_DIR/$WOLFI_SCRIPT"
 if curl -s -L -o "$DEST_DIR/$WOLFI_SCRIPT" "$SCRIPT_URL"; then
 chmod +x "$DEST_DIR/$WOLFI_SCRIPT"
