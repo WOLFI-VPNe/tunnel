@@ -144,7 +144,7 @@ if [[ -d "${config_dir}/wolfi-core" ]]; then
     cp -rf "${config_dir}/wolfi-core/"* "${config_dir}/" 2>/dev/null || true
     rm -rf "${config_dir}/wolfi-core"
 fi
-chmod u+x "${config_dir}/wolfi_premium"
+chmod +x "${config_dir}/wolfi_premium" "${config_dir}/backhaul_premium" 2>/dev/null || true
 colorize green "WOLFI installation completed."
 }
 install_wolfi_cli() {
