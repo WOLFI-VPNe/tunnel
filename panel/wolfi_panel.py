@@ -209,7 +209,8 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         # 2. Transport Section
         lines.append("[transport]")
-        lines.append(f'type = "{transport}"')
+        real_transport = "anytls" if transport == "masque" else ("wsmux" if transport == "masque-raw" else transport)
+        lines.append(f'type = "{real_transport}"')
         if not is_ipx:
             nodelay = "true" if body.get("nodelay", True) else "false"
             lines.append(f'nodelay = {nodelay}')
