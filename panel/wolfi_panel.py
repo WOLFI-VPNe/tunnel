@@ -275,9 +275,9 @@ class WolfiAPIHandler(http.server.SimpleHTTPRequestHandler):
         lines.append("")
 
         # 7. TLS Section
-        if transport in ["anytls", "wss", "wssmux"]:
+        if transport in ["anytls", "wss", "wssmux", "masque"]:
             lines.append("[tls]")
-            if transport == "anytls" or body.get("tls_sni"):
+            if transport in ["anytls", "masque"] or body.get("tls_sni"):
                 lines.append(f'sni = "{body.get("tls_sni", "www.digikala.com")}"')
             if mode == "server":
                 lines.append(f'tls_cert = "{body.get("tls_cert", "/root/wolfi-core/cert_files/cert.crt")}"')

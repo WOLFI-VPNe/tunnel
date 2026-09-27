@@ -247,7 +247,7 @@ prompt_transport_section() {
 local mode="$1"
 local is_ipx="false"
 colorize blue "━━━ Transport Configuration ━━━" bold
-local valid_transports=(tcp tcpmux xtcpmux ws wss wsmux wssmux xwsmux anytls tun)
+local valid_transports=(tcp tcpmux xtcpmux ws wss wsmux wssmux xwsmux anytls masque masque-raw tun)
 echo "Available transports:"
 printf '  • %s\n' "${valid_transports[@]}"
 while true; do
@@ -348,7 +348,7 @@ echo ""
 prompt_tls_section() {
 local mode="$1"
 local transport="$2"
-if [[ ! "$transport" =~ ^(anytls|wss|wssmux)$ ]]; then
+if [[ ! "$transport" =~ ^(anytls|wss|wssmux|masque)$ ]]; then
 return
 fi
 colorize blue "━━━ TLS Configuration ━━━" bold
